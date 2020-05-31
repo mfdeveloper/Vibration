@@ -1,0 +1,13 @@
+{
+	"name": "com.benoitfreslon.unity.vibrations",
+	"displayName": "Mobile Vibration",
+	"version": "1.0.0",
+	"unity": "2017.4",
+	"author": {
+		"name": "Benoit Freslon",
+		"url": "https://benoitfreslon.com"
+	},
+	"description": "Native plugin for Unity for iOS and Android. Use custom vibrations and haptics on mobile.",
+	"dependencies": {},
+	"repository": {}
+}

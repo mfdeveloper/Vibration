@@ -6,8 +6,8 @@ public class VibrationComponent : MonoBehaviour
     public bool enable = true;
 
     [Header("Save and Load")]
-    [Tooltip("Key to store when Save/Load vibration enable/disable config (use PlayerPrefs to save from a Menu, for example)")]
-    public string configKey = "Options";
+    [Tooltip("ScriptableObject with attributes when enable/disable vibration config (use PlayerPrefs to save from a Menu, for example)")]
+    public Options options;
 
     [Header("Effect")]
     [Tooltip("Vibration duration in seconds")]
@@ -16,35 +16,43 @@ public class VibrationComponent : MonoBehaviour
     [Tooltip("The type of vibration effect (SHORT: Android <= 9, LIGHT...HEAVY: Android >= 10)")]
     public VibrationType type = VibrationType.SHORT;
 
-    protected Options options;
-
 #if UNITY_ANDROID
     public AndroidJavaObject vibrationPlugin;
 
     public AndroidJavaClass unityPlayer;
     public AndroidJavaObject currentActivity;
 
-    public virtual bool IsEnabled => enable && options.vibration == true;
 #endif
+    public virtual bool IsEnabled
+    {
+        get
+        {
+            bool isEnable = enable;
+
+            if (options != null)
+            {
+                isEnable = enable && options.vibration;
+            }
+
+            return isEnable;
+        }
+    }
+
+    protected GameObject dialog = null;
 
     void Awake()
     {
-        if (configKey.Length > 0 && PlayerPrefs.HasKey(configKey))
+        if (options != null && PlayerPrefs.HasKey(options.GetType().Name))
         {
-            string jsonOptions = PlayerPrefs.GetString(configKey);
+            string jsonOptions = PlayerPrefs.GetString(options.GetType().Name);
             options = JsonUtility.FromJson<Options>(jsonOptions);
-        } else
-        {
-            options = new Options
-            {
-                vibration = true
-            };
         }
     }
 
     // Start is called before the first frame update
     void Start()
     {
+
 #if UNITY_ANDROID && !UNITY_EDITOR
 
         unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
@@ -74,7 +82,7 @@ public class VibrationComponent : MonoBehaviour
             vibrationPlugin = null;
         }
 #endif
-    }   
+    }
 
     ///<summary>
     /// Tiny pop vibration

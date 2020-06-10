@@ -1,0 +1,39 @@
+name: Unity Package CI
+on:
+  push:
+    branches:
+    - master
+env:
+    PKG_ROOT: ./
+jobs:
+  split-upm:
+    name: Split upm branch (force)
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Split package folder to upm branch
+      run: |
+        if [ "$PKG_ROOT" == "./" ]
+        then
+          git checkout -b upm
+        else
+          git subtree split -P "$PKG_ROOT" -b upm
+        fi 
+    - name: Create samples~ folder
+      run: |
+        git checkout upm
+        if [[ -d "Samples" ]]; then
+          git mv Samples Samples~
+          rm -f Samples.meta
+          git config --global user.name 'github-bot'
+          git config --global user.email 'github-bot@users.noreply.github.com'
+          git commit -am "fix: Samples => Samples~"
+        fi
+    - name: Push changes to upm branch
+      uses: ad-m/github-push-action@master
+      with:
+        force: true
+        branch: upm
+        github_token: ${{ secrets.GITHUB_TOKEN }}

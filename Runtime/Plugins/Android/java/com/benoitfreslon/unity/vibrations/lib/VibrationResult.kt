@@ -9,9 +9,11 @@ data class VibrationResult(var success: Boolean, var type: Type = Type.NONE) {
         PATTERN_NOT_SUPPORT(3)
     }
 
-    fun typeName(): String {
-        return type.name
-    }
+    val typeName get() = type.name
 
     fun compareType(value: Int): Boolean = value == type.value
+
+    override fun toString(): String {
+        return "AndroidPlugin: VibrationResult(success=$success, typeResult=${type.name})"
+    }
 }

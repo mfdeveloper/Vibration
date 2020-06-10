@@ -63,6 +63,8 @@ open class Vibration(context: Context? = null) {
                     result = VibrationResult(success = false, type = VibrationResult.Type.EFFECT_NOT_SUPPORT)
                 }
 
+                Log.i("VibrationUnity", result.typeName)
+
                 vibrator.vibrate(hapticData?.effect, hapticData?.attributes)
 
             } else {
@@ -115,6 +117,7 @@ open class Vibration(context: Context? = null) {
             val hapticData = HapticData()
             vibrator.vibrate(milliseconds, hapticData.attributes)
 
+           vibrator.hasAmplitudeControl()
             VibrationResult(success = true, type = VibrationResult.Type.OK)
         } else {
 

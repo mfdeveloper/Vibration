@@ -2,7 +2,7 @@ name: Unity Package CI
 on:
   push:
     branches:
-    - master
+    - upm-android-haptics
 env:
     PKG_ROOT: ./
 jobs:

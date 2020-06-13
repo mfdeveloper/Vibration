@@ -1,7 +1,7 @@
 {
 	"name": "com.benoitfreslon.unity.vibrations",
 	"displayName": "Mobile Vibration",
-	"version": "1.0.0",
+	"version": "0.0.4",
 	"unity": "2017.4",
 	"author": {
 		"name": "Benoit Freslon",

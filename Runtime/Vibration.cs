@@ -80,11 +80,9 @@ public static class Vibration
 	{
 #if !UNITY_WEBGL
 		#if UNITY_ANDROID && !UNITY_EDITOR
-		vibrator.Call("vibrate", milliseconds);
+			vibrator.Call("vibrate", milliseconds);
 		#elif UNITY_IOS && !UNITY_EDITOR
-        Handheld.Vibrate();
-		#else
-		Handheld.Vibrate();
+			Handheld.Vibrate();
 		#endif
 #endif
 	}
@@ -97,11 +95,9 @@ public static class Vibration
 	{
 #if !UNITY_WEBGL
 		#if UNITY_ANDROID && !UNITY_EDITOR
-		vibrator.Call("vibrate", pattern, repeat);
+			vibrator.Call("vibrate", pattern, repeat);
 		#elif UNITY_IOS && !UNITY_EDITOR
-        Handheld.Vibrate();
-		#else
-		Handheld.Vibrate();
+			Handheld.Vibrate();
 		#endif
 #endif
 	}
@@ -139,7 +135,7 @@ public static class Vibration
 
 	public static void Vibrate()
 	{
-#if !UNITY_WEBGL
+#if !UNITY_WEBGL && (UNITY_ANDROID || UNITY_IOS)
 		Handheld.Vibrate();
 #endif
 	}

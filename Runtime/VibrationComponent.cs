@@ -42,7 +42,21 @@ public class VibrationComponent : MonoBehaviour
 
     void Awake()
     {
-        if (options != null && PlayerPrefs.HasKey(options.GetType().Name))
+
+        if (options == null)
+        {
+            /**
+             * Fallback to some Unity versions that ScriptableObjects 
+             * passed by inspector is disappear when plays.
+             * 
+             * Or, if a developer forget to define a custom ScriptableObject
+             * to save options on inspector
+             */
+            options = ScriptableObject.CreateInstance<Options>();
+            Debug.LogWarningFormat("The parameter {0} is required to be defined in inspector");
+        }
+
+        if (PlayerPrefs.HasKey(options.GetType().Name))
         {
             string jsonOptions = PlayerPrefs.GetString(options.GetType().Name);
 
@@ -152,8 +166,6 @@ public class VibrationComponent : MonoBehaviour
         }
     #elif UNITY_IOS && !UNITY_EDITOR
         Handheld.Vibrate();
-    #else
-		Handheld.Vibrate();
     #endif
 #endif
     }
@@ -166,8 +178,6 @@ public class VibrationComponent : MonoBehaviour
         Vibrate(milliseconds);
     #elif UNITY_IOS && !UNITY_EDITOR
         Handheld.Vibrate();
-    #else
-		Handheld.Vibrate();
     #endif
 #endif
     }
@@ -190,8 +200,6 @@ public class VibrationComponent : MonoBehaviour
             AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibr", pattern, (int) repeat, null);
         }
     #elif UNITY_IOS && !UNITY_EDITOR
-        Handheld.Vibrate();
-    #else
         Handheld.Vibrate();
     #endif
 #endif

@@ -45,7 +45,9 @@ public class VibrationComponent : MonoBehaviour
         if (options != null && PlayerPrefs.HasKey(options.GetType().Name))
         {
             string jsonOptions = PlayerPrefs.GetString(options.GetType().Name);
-            options = JsonUtility.FromJson<Options>(jsonOptions);
+
+            // Not use JsonUtility.FromJson() to ScriptableObject or Monobehavior objects
+            JsonUtility.FromJsonOverwrite(jsonOptions, options);
         }
     }
 

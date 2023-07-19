@@ -12,8 +12,7 @@ enum class VibrationType(val value: Int) {
     SHORT(0) {
         override fun getData(milliseconds: Long?, attributes: AudioAttributes?): HapticData? {
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                var vibrationEffect =
-                    VibrationEffect.createOneShot(
+                val vibrationEffect = VibrationEffect.createOneShot(
                         milliseconds!!,
                         VibrationEffect.DEFAULT_AMPLITUDE
                     )
@@ -78,12 +77,16 @@ enum class VibrationType(val value: Int) {
 
     abstract fun getData(milliseconds: Long? = null, attributes: AudioAttributes? = null): HapticData?
 
-    /** Create an enum from a Int
-     * @see https://stackoverflow.com/questions/53523948/how-do-i-create-an-enum-from-a-int-in-kotlin/53524077
-     */
     companion object {
+
         private val values = values()
 
+        /**
+         * Create an enum from an Int.
+         *
+         * ## References
+         * - [Create an enum from an Int in Kotlin?](https://stackoverflow.com/a/53524077)
+         */
         @JvmStatic
         fun getByValue(value: Int) = values.firstOrNull { it.value == value }
     }

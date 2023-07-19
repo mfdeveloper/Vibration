@@ -8,22 +8,19 @@ import android.os.Vibrator
 import android.util.Log
 
 enum class VibrationRepeat(val value: Int) {
-    NO_REPEAT(-1), FOREVER(0)
+    NO_REPEAT(-1),
+    FOREVER(0)
 }
 
-open class Vibration(context: Context? = null) {
-
-    lateinit var vibrator: Vibrator
-    private set
+open class Vibration(
+    context: Context? = null,
+    protected var vibrator: Vibrator? = null
+) {
 
     init {
-        if (context != null) {
+        if (context != null && vibrator == null) {
             vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
         }
-    }
-
-    constructor(vibrator: Vibrator): this() {
-        this.vibrator = vibrator
     }
 
     /**
@@ -51,7 +48,7 @@ open class Vibration(context: Context? = null) {
         val defaultType = VibrationType.SHORT
         val currentType = type ?: defaultType
 
-        if (vibrator.hasVibrator()) {
+        if (hasVibrator()) {
 
             var hapticData: HapticData? = currentType.getData(milliseconds, attributes) ?: HapticData(attributes = attributes)
 
@@ -65,7 +62,7 @@ open class Vibration(context: Context? = null) {
 
                 Log.i("VibrationUnity", result.typeName)
 
-                vibrator.vibrate(hapticData?.effect, hapticData?.attributes)
+                vibrator?.vibrate(hapticData?.effect, hapticData?.attributes)
 
             } else {
                 vibr(milliseconds, hapticData?.attributes!!)
@@ -82,18 +79,18 @@ open class Vibration(context: Context? = null) {
      */
     fun vibr(pattern: LongArray, repeat: Int = -1, attributes: AudioAttributes? = null): VibrationResult {
 
-        if (vibrator.hasVibrator()) {
+        if (hasVibrator()) {
 
             val hapticData = HapticData(attributes = attributes)
 
             return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-                vibrator.vibrate(pattern, repeat, hapticData.attributes)
+                vibrator?.vibrate(pattern, repeat, hapticData.attributes)
 
                 VibrationResult(success = true, type = VibrationResult.Type.OK)
             } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 val effect = VibrationEffect.createWaveform(pattern, repeat)
 
-                vibrator.vibrate(effect, hapticData.attributes)
+                vibrator?.vibrate(effect, hapticData.attributes)
 
                 VibrationResult(success = true, type = VibrationResult.Type.OK)
             } else {
@@ -108,16 +105,18 @@ open class Vibration(context: Context? = null) {
         return vibr(pattern, repeat.value, attributes)
     }
 
+    fun hasVibrator() = vibrator?.hasVibrator() == true
+
     protected open fun vibr(milliseconds: Long, attributes: AudioAttributes): VibrationResult {
 
        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            vibrator.vibrate(milliseconds)
+            vibrator?.vibrate(milliseconds)
             VibrationResult(success = true, type = VibrationResult.Type.OK)
         } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             val hapticData = HapticData()
-            vibrator.vibrate(milliseconds, hapticData.attributes)
+            vibrator?.vibrate(milliseconds, hapticData.attributes)
 
-           vibrator.hasAmplitudeControl()
+           vibrator?.hasAmplitudeControl()
             VibrationResult(success = true, type = VibrationResult.Type.OK)
         } else {
 

@@ -13,7 +13,30 @@ data class VibrationResult(var success: Boolean, var type: Type = Type.NONE) {
 
     fun compareType(value: Int): Boolean = value == type.value
 
+    fun equals(other: VibrationResult): Boolean {
+        return super.equals(other) || compareType(other.type.value)
+    }
+
+    override fun equals(other: Any?): Boolean {
+
+        if (other is VibrationResult) {
+            return equals(other)
+        }
+
+        return super.equals(other)
+    }
+
+    /**
+     * [Any.hashCode] generated implementation on Android Studio,
+     * when implement [Any.equals]
+     */
+    override fun hashCode(): Int {
+        var result = success.hashCode()
+        result = 31 * result + type.hashCode()
+        return result
+    }
+
     override fun toString(): String {
-        return "AndroidPlugin: VibrationResult(success=$success, typeResult=${type.name})"
+        return "AndroidPlugin: ${this::class.simpleName}(${::success.name}=$success, typeResult=${type.name})"
     }
 }

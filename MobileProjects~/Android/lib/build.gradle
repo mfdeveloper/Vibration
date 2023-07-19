@@ -1,30 +1,24 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.library'
+    id 'kotlin-android'
+    id 'kotlin-parcelize'
+}
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
+    namespace 'com.benoitfreslon.unity.vibrations.lib'
+    compileSdkVersion 33
 
     sourceSets {
         main {
             manifest.srcFile '../../../Runtime/Plugins/Android/AndroidManifest.xml'
             java.srcDirs = ['../../../Runtime/Plugins/Android/java', 'src/main/java']
-            res.srcDirs = ['src/main/res']
-
-            /**
-             *  PS: Avoid xmlns res/android URI not found in
-             *  AndroidManifest.xml file in a custom folder
-             */
-            resources.srcDirs = ['../../../Runtime/Plugins/Android', 'src']
+            res.srcDirs = ['src/main/res', '../../../Runtime/Plugins/Android/res']
         }
     }
 
     defaultConfig {
         minSdkVersion 19
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
+        targetSdkVersion 33
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -37,14 +31,28 @@ android {
         }
     }
 
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = '17'
+    }
 }
 
 dependencies {
+
+    // --- Local modules/libraries ---
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'androidx.core:core-ktx:1.2.0'
-    testImplementation 'junit:junit:4.13'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    // --- Core ---
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "androidx.appcompat:appcompat:$appcompat_version"
+    implementation "androidx.core:core-ktx:$androidXCore_version"
+
+    // --- Testing ---
+    testImplementation "junit:junit:$junit_version"
+    androidTestImplementation "androidx.test.ext:junit:$androidXJunit_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidXEspresso_version"
 }

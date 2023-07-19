@@ -17,7 +17,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        vibration = Vibration(this)
+        vibration = Vibration(context = this)
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {
@@ -25,7 +25,7 @@ class MainActivity : AppCompatActivity() {
         return when(event?.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 val result =  vibration.vibr(milliseconds = 20, type = VibrationType.LIGHT)
-                Log.w("VibrationPlugin", result.typeName())
+                Log.w("VibrationPlugin", result.typeName)
                 true
             }
             else -> super.onTouchEvent(event)

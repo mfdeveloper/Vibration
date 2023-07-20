@@ -1,10 +1,13 @@
 ﻿public enum VibrationType
 {
-    SHORT,
-    LIGHT,
-    TICK,
-    MEDIUM,
-    DOUBLE_TAP,
-    DOUBLE_CLICK,
-    HEAVY
+    Short,
+    Light,
+    Tick,
+    LowTick,
+    Medium,
+    DoubleTap,
+    DoubleClick,
+    Heavy,
+    Spin,
+    Thud
 }

@@ -2,7 +2,7 @@
 
 buildscript {
     ext {
-        kotlin_version = '1.8.10'
+        kotlin_version = '1.9.0'
         appcompat_version = '1.6.1'
         androidXCore_version = '1.10.1'
         contraintLayout_version = '2.1.4'

@@ -1,5 +1,5 @@
 ﻿public enum VibrationRepeat
 {
-    NO_REPEAT = -1,
-    FOREVER = 0
+    NoRepeat = -1,
+    Forever = 0
 }

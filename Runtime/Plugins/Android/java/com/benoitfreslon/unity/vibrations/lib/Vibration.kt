@@ -1,115 +1,176 @@
 package com.benoitfreslon.unity.vibrations.lib
 
+import android.annotation.TargetApi
 import android.content.Context
+import android.content.ContextWrapper
 import android.media.AudioAttributes
 import android.os.Build
-import android.os.CombinedVibration
-import android.os.VibrationAttributes
 import android.os.VibrationEffect
 import android.os.Vibrator
-import android.os.VibratorManager
 import android.util.Log
 import com.benoitfreslon.unity.vibrations.lib.entities.HapticData
+import com.benoitfreslon.unity.vibrations.lib.entities.HapticPattern
 import com.benoitfreslon.unity.vibrations.lib.entities.VibrationResult
+import com.benoitfreslon.unity.vibrations.lib.enums.VibrationRepeat
+import com.benoitfreslon.unity.vibrations.lib.enums.VibrationType
+import com.benoitfreslon.unity.vibrations.lib.extensions.getByValue
 import com.benoitfreslon.unity.vibrations.lib.extensions.isEffectSupported
 import com.benoitfreslon.unity.vibrations.lib.extensions.isPrimitiveSupported
+import java.util.concurrent.TimeUnit
 
-@Suppress("SpellCheckingInspection", "MemberVisibilityCanBePrivate")
-open class Vibration(
+@Suppress("MemberVisibilityCanBePrivate")
+
+/**
+ * **PS:** Pay attention that isn't possible use the new annotation **`androidx.annotation.RequiresApi`** on Unity (<= _2022.3.1_)
+ * You will see the error *"Unresolved reference: RequiresApi"* when build for Android platform fro Unity Editor :(
+ *
+ * Probably, you must use [googlesamples/unity-jar-resolver](https://github.com/googlesamples/unity-jar-resolver) Google plugin in order to
+ * add the dependency: `androidx.core:core-ktx:1.10.1`, for instance.
+ *
+ * If you need restrict any method to an specific Android API, use [android.annotation.TargetApi] annotation instead
+ */
+open class Vibration @JvmOverloads constructor(
     context: Context? = null,
     protected var vibrator: Vibrator? = null
 ) {
 
-    var vibratorManager: VibratorManager? = null
-
     init {
         context?.let {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-
-                if (vibrator == null) {
-                    vibrator = vibratorManager?.defaultVibrator
-                }
-            } else if (vibrator == null) {
+            if (vibrator == null) {
+                @Suppress("DEPRECATION")
                 vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+
+                HapticData.vibrator = vibrator
             }
         }
     }
 
-    /**
-     * Method overloading for call from Unity, passing C# enums like integer values
-     */
-    fun vibr(milliseconds: Long, valueType: Int, vibrationAttributes: VibrationAttributes? = null): VibrationResult {
-        return vibr(milliseconds, VibrationType.getByValue(valueType), vibrationAttributes)
+    @JvmOverloads
+    constructor(
+        contextWrapper: ContextWrapper,
+        vibrator: Vibrator? = null
+    ) : this(
+        contextWrapper.applicationContext,
+        vibrator
+    )
+
+    @JvmOverloads
+    @Suppress("unused")
+    fun vibrate(milliseconds: Long? = null, valueType: Int, audioAttributes: AudioAttributes? = null): VibrationResult {
+        return vibrate(milliseconds, Enum.getByValue<VibrationType>(valueType), audioAttributes)
     }
 
     /**
-     *
-     * PS: The name of this method is "vibr()" to avoid conflicts with android core vibrator.vibrate()
-     *     from Android JNI Unity bridge
+     * Use this overload method if you prefer call this from Unity with a primitive **`int`** type [milliseconds] parameter, instead of
+     * instantiate a `new AndroidJavaObject("java.lang.Long")" from `C#`.
      */
-    fun vibr(milliseconds: Long, type: VibrationType? = null, vibrationAttributes: VibrationAttributes? = null): VibrationResult {
+    @JvmOverloads
+    @Suppress("unused")
+    fun vibrate(milliseconds: Int, valueType: Int, audioAttributes: AudioAttributes? = null): VibrationResult {
+        return vibrate(milliseconds.toLong(), Enum.getByValue<VibrationType>(valueType), audioAttributes)
+    }
 
-        var result = VibrationResult(success = true, type = VibrationResult.Type.OK)
+    @JvmOverloads
+    open fun vibrate(milliseconds: Long? = null, type: VibrationType? = null, audioAttributes: AudioAttributes? = null): VibrationResult {
 
         if (!hasVibrator()) {
-            result = VibrationResult(success = false, type = VibrationResult.Type.VIBRATOR_NOT_SUPPORT)
-            return result
+            return VibrationResult(success = false, type = VibrationResult.Type.VIBRATOR_NOT_SUPPORT)
         }
 
-        /**
-         * Default VibrationType here, to distinct from method vibrate(milliseconds, attributes) call.
-         * If define this value on parameter "type", the compiler call the another method
-         */
-        val defaultType = VibrationType.SHORT
-        val currentType = type ?: defaultType
+        if (milliseconds == null && type == null) {
+            Log.e(TAG, "Time value 'milliseconds' or ${VibrationType::class.qualifiedName} 'type' parameter is required!")
+            return VibrationResult(success = false, type = VibrationResult.Type.DURATION_OR_TYPE_REQUIRED)
+        }
 
-        var hapticData = currentType.getData(vibrator, milliseconds, vibrationAttributes) ?: HapticData(vibrationAttributes = vibrationAttributes)
+        var duration = milliseconds
+        var patternData: HapticPattern? = null
+        var hapticData = HapticData(audioAttributes = audioAttributes)
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        var result = VibrationResult(success = true, type = VibrationResult.Type.OK)
+        val resultSuccessMsg = "Vibration with result: '%s'"
 
-            // Fallback to Android O and P (8 and 9)
-            if (hapticData.effect == null) {
-                hapticData = defaultType.getData(vibrator, milliseconds, vibrationAttributes) ?: HapticData(vibrationAttributes = vibrationAttributes)
+        if (type != null) {
+            hapticData = type.getData(vibrator, duration, audioAttributes) ?: hapticData
+            result.vibrationType = type
 
-                if (hapticData.effect == null) {
-                    result = VibrationResult(success = false, type = VibrationResult.Type.EFFECT_NOT_SUPPORT)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+
+                if (hapticData.isEmpty) {
+                    return VibrationResult(
+                        success = false,
+                        type = VibrationResult.Type.EFFECT_NOT_SUPPORT,
+                        vibrationType = type
+                    )
+                } else if (hapticData.effect != null) {
+                    @Suppress("DEPRECATION")
+                    vibrator?.vibrate(hapticData.effect, hapticData.audioAttributes)
+
+                    Log.i(TAG, String.format(resultSuccessMsg, result))
                     return result
                 }
             }
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                if (hapticData.vibrationAttributes != null) {
-
-                    vibrator?.vibrate(hapticData.effect!!, hapticData.vibrationAttributes!!)
-                } else {
-                    Log.e(TAG, "The parameter: 'vibrationAttributes' is required for Android SDK >= ${Build.VERSION_CODES.TIRAMISU}")
-
-                    vibrator?.vibrate(hapticData.effect, hapticData.attributes)
-                    result = VibrationResult(success = false, type = VibrationResult.Type.ATTRIBUTES_MISSING)
+            if (hapticData.effect == null) {
+                if (hapticData.fallbackDuration != null) {
+                    duration = hapticData.fallbackDuration
                 }
-            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                vibratorManager?.vibrate(
-                    CombinedVibration.createParallel(hapticData.effect!!),
-                    hapticData.vibrationAttributes
-                )
-            } else {
-                vibrator?.vibrate(hapticData.effect, hapticData.attributes)
-            }
 
-        } else {
-            vibr(milliseconds, hapticData.attributes!!)
+                if (hapticData.patternData != null) {
+                    patternData = hapticData.patternData
+                }
+            }
         }
 
-        Log.i(TAG, "Vibration with result: '$result'")
+        if (patternData != null) {
+
+            result = vibrate(patternData.pattern, patternData.repeat, hapticData.audioAttributes)
+
+        } else if (duration != null && duration > 0) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(duration, hapticData.audioAttributes)
+
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator?.vibrate(duration)
+            }
+
+            result.duration = duration
+        }
+
+        Log.i(TAG, String.format(resultSuccessMsg, result))
         return result
     }
 
-    fun vibr(milliseconds: Long, type: VibrationType? = null, attributes: AudioAttributes): VibrationResult? {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            val vibrationAttributes = VibrationAttributes.Builder(attributes).build()
-            vibr(milliseconds, type, vibrationAttributes)
-        } else null
+    @Suppress("unused")
+    fun vibrate(duration: Long, timeUnit: TimeUnit): VibrationResult {
+        val milliseconds = if (timeUnit != TimeUnit.MILLISECONDS) {
+             timeUnit.toMillis(duration)
+        } else duration
+
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            vibrate(milliseconds)
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(milliseconds)
+
+            val result = VibrationResult(
+                success = true,
+                type = VibrationResult.Type.OK,
+                duration = milliseconds
+            )
+
+            Log.i(TAG, "Vibration with result: '$result'")
+
+            result
+        }
+    }
+
+    @Suppress("unused")
+    fun vibrateWithTimeUnit(duration: Long, timeUnitValue: String = TimeUnit.SECONDS.name): VibrationResult {
+        val timeUnit = enumValueOf<TimeUnit>(timeUnitValue)
+        return vibrate(duration, timeUnit)
     }
 
     /**
@@ -117,42 +178,53 @@ open class Vibration(
      *       - wait: A array of Long values with a time to WAIT before each vibrate, in milliseconds
      *       - vibrate: A array of Long values with a time to VIBRATE after each wait value, in milliseconds
      */
-    fun vibr(pattern: LongArray, repeat: Int = -1, vibrationAttributes: VibrationAttributes? = null): VibrationResult {
+    @JvmOverloads
+    fun vibrate(pattern: LongArray, repeat: Int = -1, audioAttributes: AudioAttributes? = null): VibrationResult {
 
         if (!hasVibrator()) {
             return VibrationResult(success = false, type = VibrationResult.Type.VIBRATOR_NOT_SUPPORT)
         }
-        
-        val hapticData = HapticData(vibrationAttributes = vibrationAttributes)
 
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            vibrator?.vibrate(pattern, repeat, hapticData.attributes)
+        val hapticData = HapticData(
+            audioAttributes = audioAttributes,
+            patternData = HapticPattern(pattern = pattern, repeat = repeat)
+        )
 
-            VibrationResult(success = true, type = VibrationResult.Type.OK)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (hapticData.vibrationAttributes != null) {
-                val effect = VibrationEffect.createWaveform(pattern, repeat)
-                vibrator?.vibrate(effect, hapticData.vibrationAttributes!!)
+        val result = VibrationResult(
+            success = true,
+            type = VibrationResult.Type.OK,
+            patternData = hapticData.patternData
+        )
 
-                VibrationResult(success = true, type = VibrationResult.Type.OK)
-            } else {
-                Log.e(TAG, "The parameter: 'vibrationAttributes' is required for Android SDK >= ${Build.VERSION_CODES.TIRAMISU}")
-                return VibrationResult(success = false, type = VibrationResult.Type.ATTRIBUTES_MISSING)
-            }
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && Build.VERSION.SDK_INT <= Build.VERSION_CODES.O) {
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(pattern, repeat, hapticData.audioAttributes)
 
-        } else if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val effect = VibrationEffect.createWaveform(pattern, repeat)
-            vibrator?.vibrate(effect, hapticData.attributes)
+            result
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 
-            VibrationResult(success = true, type = VibrationResult.Type.OK)
+            // Fallback to previously created HapticData.effect from pattern
+            val effect = hapticData.effect ?: VibrationEffect.createWaveform(pattern, repeat)
+
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(effect, hapticData.audioAttributes)
+
+            result
         } else {
-            VibrationResult(success = false, type = VibrationResult.Type.PATTERN_NOT_SUPPORT)
+            @Suppress("DEPRECATION")
+            vibrator?.vibrate(pattern, repeat)
+
+            result
         }
     }
 
+    fun vibrate(pattern: LongArray, repeat: Int = -1, hapticData: HapticData): VibrationResult {
+        return vibrate(pattern, repeat, hapticData.audioAttributes)
+    }
+
     @Suppress("unused")
-    fun vibr(pattern: LongArray, repeat: VibrationRepeat = VibrationRepeat.NO_REPEAT, vibrationAttributes: VibrationAttributes? = null): VibrationResult {
-        return vibr(pattern, repeat.value, vibrationAttributes)
+    fun vibrate(pattern: LongArray, repeat: VibrationRepeat = VibrationRepeat.NO_REPEAT, audioAttributes: AudioAttributes? = null): VibrationResult {
+        return vibrate(pattern, repeat = repeat.value, audioAttributes)
     }
 
     fun hasVibrator() = vibrator?.hasVibrator() == true
@@ -162,29 +234,20 @@ open class Vibration(
     @Suppress("unused")
     fun isPrimitiveSupported(primitiveId: Int) = vibrator.isPrimitiveSupported(primitiveId)
 
-    protected open fun vibr(milliseconds: Long, attributes: AudioAttributes): VibrationResult {
-        
-        if (!hasVibrator()) {
-            return VibrationResult(success = false, type = VibrationResult.Type.VIBRATOR_NOT_SUPPORT)
-        }
-        
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-            vibrator?.vibrate(milliseconds)
-            VibrationResult(success = true, type = VibrationResult.Type.OK)
-        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            val hapticData = HapticData()
-            vibrator?.vibrate(milliseconds, hapticData.attributes)
-    
-            VibrationResult(success = true, type = VibrationResult.Type.OK)
-        } else {
-    
-            // Fallback to Android.O vibrate() function, if someone call this method directly
-           vibr(milliseconds, VibrationType.SHORT, attributes)
-           VibrationResult(success = true, type = VibrationResult.Type.OK)
+    @Suppress("unused")
+    @TargetApi(Build.VERSION_CODES.O)
+    fun hasAmplitudeControl() = vibrator?.hasAmplitudeControl() == true
+
+    @Suppress("unused")
+    open fun cancel() {
+        if (hasVibrator()) {
+            vibrator?.cancel()
         }
     }
 
     companion object {
-        const val TAG = "VibrationPlugin"
+
+        @JvmStatic
+        val TAG: String = "${Vibration::class.simpleName}Plugin"
     }
 }

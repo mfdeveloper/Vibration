@@ -2,88 +2,82 @@ package com.benoitfreslon.unity.vibrations.lib.entities
 
 import android.media.AudioAttributes
 import android.os.Build
-import android.os.VibrationAttributes
 import android.os.VibrationEffect
+import android.os.Vibrator
+import com.benoitfreslon.unity.vibrations.lib.extensions.isDefault
+import com.benoitfreslon.unity.vibrations.lib.extensions.predefinedAudioAttributes
+import com.benoitfreslon.unity.vibrations.lib.extensions.functions.predefinedEffect
+import com.benoitfreslon.unity.vibrations.lib.extensions.functions.predefinedPrimitive
 
-data class HapticData(
+open class HapticData(
     var effect: VibrationEffect? = null,
-    var attributes: AudioAttributes? = null,
-    var vibrationAttributes: VibrationAttributes? = null
+    open var fallbackDuration: Long? = null,
+    var patternData: HapticPattern? = null,
+    open var effectPrimitive: Boolean = false,
+    audioAttributes: AudioAttributes? = null
 ) {
-
     var effectId: Int? = null
-        private set
+        protected set
+
+    /**
+     * In order to avoid warning: "_Kotlin calling non final function in constructor works_",
+     * use [lazy] delegate instead of calling [initAudioAttributes] inside of a constructor.
+     *
+     * **See:** [Kotlin calling non final function in constructor](https://stackoverflow.com/a/50222496)
+     */
+    open val audioAttributes: AudioAttributes? by lazy {
+        initAudioAttributes(audioAttributes)
+    }
+
+    val isEmpty: Boolean
+        get() {
+            return effect == null && fallbackDuration == null && patternData == null
+        }
 
     init {
-        effect = effect ?: predefinedEffect()
-        attributes = attributes ?: predefinedAudioAttributes()
-
-        attributes?.let {
-            vibrationAttributes = vibrationAttributes ?: predefinedVibrationAttributes(it)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            effect = effect ?: predefinedEffect(id = VibrationEffect.EFFECT_TICK)
         }
     }
 
+    @JvmOverloads
     constructor(
-        effectId: Int,
+        effectId: Int?,
+        fallbackDuration: Long? = null,
+        patternData: HapticPattern? = null,
         effectPrimitive: Boolean = false,
-        attributes: AudioAttributes? = null,
-        vibrationAttributes: VibrationAttributes? = null
+        audioAttributes: AudioAttributes? = null
     ) : this(
-        attributes = attributes,
-        vibrationAttributes = vibrationAttributes
+        audioAttributes = audioAttributes,
+    ) {
+        this.patternData = patternData
+        initEffectBy(effectId, effectPrimitive, fallbackDuration, patternData)
+    }
+
+    protected fun initEffectBy(
+        effectId: Int?,
+        effectPrimitive: Boolean,
+        fallbackDuration: Long? = null,
+        patternData: HapticPattern? = null
     ) {
         this.effectId = effectId
 
         effect = if (effectPrimitive) {
-            predefinedPrimitive(effectId)
+            predefinedPrimitive(vibrator, effectId, fallbackDuration, patternData)
         } else {
-            predefinedEffect(effectId)
+            effect ?: predefinedEffect(vibrator, effectId, fallbackDuration, patternData)
         }
+    }
+
+    protected open fun initAudioAttributes(audioAttributes: AudioAttributes? = null): AudioAttributes? {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (audioAttributes != null && !audioAttributes.isDefault) audioAttributes else predefinedAudioAttributes()
+        } else null
     }
 
     companion object {
 
         @JvmStatic
-        fun predefinedEffect(id: Int? = null): VibrationEffect? {
-
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                VibrationEffect.createPredefined(id ?: VibrationEffect.EFFECT_TICK)
-            } else null
-        }
-
-        /**
-         * Use [VibrationEffect.startComposition] to create a [VibrationEffect] to pass through
-         * [android.os.VibratorManager.vibrate]
-         *
-         * ## References
-         *
-         * - [Android 12: VibratorManager & New Vibration Primitives](https://yggr.medium.com/exploring-android-12-vibratormanager-new-vibration-primitives-e862c95fe938)
-         */
-        @JvmStatic
-        fun predefinedPrimitive(primitiveId: Int): VibrationEffect? {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                VibrationEffect.startComposition()
-                    .addPrimitive(primitiveId)
-                    .compose()
-            } else null
-        }
-
-        @JvmStatic
-        fun predefinedAudioAttributes(audioUsage: Int? = null): AudioAttributes? {
-
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                 AudioAttributes.Builder()
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .setUsage(audioUsage ?: AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-                    .build()
-            } else null
-        }
-
-        @JvmStatic
-        fun predefinedVibrationAttributes(it: AudioAttributes): VibrationAttributes? {
-            return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                VibrationAttributes.Builder(it).build()
-            } else null
-        }
+        var vibrator: Vibrator? = null
     }
 }

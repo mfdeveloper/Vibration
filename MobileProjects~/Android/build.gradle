@@ -4,11 +4,15 @@ buildscript {
     ext {
         kotlin_version = '1.9.0'
         appcompat_version = '1.6.1'
-        androidXCore_version = '1.10.1'
+        androidx_core_version = '1.10.1'
+        fragmentktx_version = '1.5.7'
+        activityktx_version = '1.7.2'
+        lifecycle_version = '2.6.1'
         contraintLayout_version = '2.1.4'
         junit_version = '4.13.2'
-        androidXJunit_version = '1.1.5'
-        androidXEspresso_version = '3.5.1'
+        google_truth_version = '1.1.4'
+        androidx_junit_version = '1.1.5'
+        androidx_espresso_version = '3.5.1'
     }
     repositories {
         google()
@@ -16,7 +20,7 @@ buildscript {
         
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.0.2'
+        classpath 'com.android.tools.build:gradle:8.1.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -28,7 +32,6 @@ allprojects {
     repositories {
         google()
         mavenCentral()
-        
     }
 }
 

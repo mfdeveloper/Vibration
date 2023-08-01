@@ -1,8 +1,8 @@
 plugins {
     id 'com.android.library'
+    id 'org.jetbrains.kotlin.android'
     id 'kotlin-android'
     id 'kotlin-parcelize'
-    id 'org.jetbrains.kotlin.android'
 }
 
 android {
@@ -38,7 +38,7 @@ android {
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 
@@ -47,13 +47,9 @@ dependencies {
     // --- Local modules/libraries ---
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    // --- Core ---
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "androidx.appcompat:appcompat:$appcompat_version"
-    implementation "androidx.core:core-ktx:$androidXCore_version"
-
     // --- Testing ---
     testImplementation "junit:junit:$junit_version"
-    androidTestImplementation "androidx.test.ext:junit:$androidXJunit_version"
-    androidTestImplementation "androidx.test.espresso:espresso-core:$androidXEspresso_version"
+    testImplementation "com.google.truth:truth:$google_truth_version"
+    androidTestImplementation "androidx.test.ext:junit:$androidx_junit_version"
+    androidTestImplementation "androidx.test.espresso:espresso-core:$androidx_espresso_version"
 }

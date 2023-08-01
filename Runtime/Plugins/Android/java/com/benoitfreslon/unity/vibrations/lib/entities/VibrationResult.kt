@@ -1,14 +1,26 @@
 package com.benoitfreslon.unity.vibrations.lib.entities
 
-data class VibrationResult(var success: Boolean, var type: Type = Type.NONE) {
+import com.benoitfreslon.unity.vibrations.lib.enums.VibrationType
+import com.benoitfreslon.unity.vibrations.lib.extended.enums.VibrationTypeExtended
+
+data class VibrationResult @JvmOverloads constructor(
+    var success: Boolean = false,
+    var type: Type = Type.NONE,
+    var duration: Long? = null,
+    var patternData: HapticPattern? = null,
+    var vibrationType: VibrationType? = null,
+    var vibrationTypeExtended: VibrationTypeExtended? = null
+) {
 
     enum class Type(val value: Int) {
         NONE(0),
         OK(1),
-        EFFECT_NOT_SUPPORT(2),
-        PATTERN_NOT_SUPPORT(3),
-        VIBRATOR_NOT_SUPPORT(4)
-,       ATTRIBUTES_MISSING(5)
+        ERROR(2),
+        EFFECT_NOT_SUPPORT(3),
+        PATTERN_NOT_SUPPORT(4),
+        VIBRATOR_NOT_SUPPORT(5),
+        DURATION_OR_TYPE_REQUIRED(6),
+        ATTRIBUTES_MISSING(7)
     }
 
     val typeName get() = type.name
@@ -39,6 +51,24 @@ data class VibrationResult(var success: Boolean, var type: Type = Type.NONE) {
     }
 
     override fun toString(): String {
-        return "VibrationPlugin: ${this::class.simpleName}(${::success.name}=$success, typeResult=${type.name})"
+        val defaultResult = "VibrationPlugin: ${this::class.simpleName}(${::success.name}=$success, typeResult=$typeName"
+        val builder = StringBuilder(defaultResult)
+
+        if (vibrationType != null) {
+            builder.append(", vibrationType=${vibrationType?.name}")
+                .append(", vibrationTypeValue=${vibrationType?.ordinal}")
+        }
+
+        if (duration != null) {
+            builder.append(", durationMilliseconds=$duration")
+        }
+
+        if (patternData != null) {
+            builder.append(", pattern=$patternData")
+        }
+
+        builder.append(")")
+
+        return builder.toString()
     }
 }

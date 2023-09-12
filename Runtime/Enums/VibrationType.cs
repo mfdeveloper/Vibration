@@ -2,16 +2,22 @@
 {
     public enum VibrationType
     {
-        None = -1,
-        Short,
-        Light,
+        None = -2,
+        HandheldDefault = -1,
         Tick,
         LowTick,
-        Medium,
+        Short,
+        Light,
+        Normal,
+        Click,
         DoubleTap,
         DoubleClick,
         Heavy,
+        Thud,
         Spin,
-        Thud
+        QuickRise,
+        SlowRise,
+        QuickFall,
+        GrowsIntensityDiesOff
     }
 }

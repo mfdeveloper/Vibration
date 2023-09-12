@@ -1,8 +1,7 @@
-﻿using System;
+﻿using System.Diagnostics.CodeAnalysis;
 using UnityEngine;
-using UAP;
-using VibrationPlugin.Enums;
 using VibrationPlugin.Save;
+using VibrationPlugin.Enums;
 
 namespace VibrationPlugin
 {
@@ -31,13 +30,14 @@ namespace VibrationPlugin
         protected VibrationType type = VibrationType.Light;
 
         #if UNITY_ANDROID
-
-        protected AndroidJavaObject vibrationPlugin;
-
+        
+        // -- Unity Android core instances --
         protected AndroidJavaClass unityPlayer;
         protected AndroidJavaObject currentActivity;
-        protected AndroidJavaObject context;
-        protected AndroidJavaObject audioAttributesBuilder;
+        
+        // -- VibrationPlugin required instances --
+        protected AndroidJavaObject vibrationPlugin;
+        protected AndroidJavaObject durationLongObj;
 
         #endif
 
@@ -70,29 +70,18 @@ namespace VibrationPlugin
         }
 
         // Start is called before the first frame update
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
         protected virtual void Start()
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR
-
+            #if UNITY_ANDROID
+            
+            // PS: If you wish instantiate Kotlin Companion or Java static classes straight-forward from full package name,
+            // use the "$" special character (e.g "android.media.AudioAttributes$Builder")
             unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
             currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-            context = currentActivity.Call<AndroidJavaObject>("getApplicationContext");
-            audioAttributesBuilder = new AndroidJavaObject("android.media.AudioAttributes$Builder");
-            vibrationPlugin = new AndroidJavaObject("com.benoitfreslon.unity.vibrations.lib.Vibration", context);
+            vibrationPlugin = new AndroidJavaObject("com.benoitfreslon.unity.vibrations.lib.Vibration", currentActivity);
 
             #endif
-            
-            // Vibrate(milliseconds: (long) duration, type);
-        }
-
-        private void OnApplicationPause(bool pauseStatus)
-        {
-            Vibrate(milliseconds: duration, type);
-        }
-
-        protected virtual void OnEnable()
-        {
-            UAP_AccessibilityManager.RegisterOnSwipeSingleTapCallback(OnSwipe);
         }
 
         protected virtual void OnDisable()
@@ -105,36 +94,28 @@ namespace VibrationPlugin
                 unityPlayer = null;
             }
 
+            if (currentActivity != null)
+            {
+                currentActivity.Dispose();
+                currentActivity = null;
+            }
+
             if (vibrationPlugin != null)
             {
                 vibrationPlugin.Dispose();
                 vibrationPlugin = null;
             }
 
-            if (currentActivity != null)
+            if (durationLongObj != null)
             {
-                currentActivity.Dispose();
-                currentActivity = null;
-            }
-            
-            if (context != null)
-            {
-                context.Dispose();
-                context = null;
+                durationLongObj.Dispose();
+                durationLongObj = null;
             }
 
             #endif
-            
-            UAP_AccessibilityManager.UnregisterOnSwipeSingleTapCallback(OnSwipe);
         }
 
         #endregion
-        
-        private void OnSwipe(UAP_AccessibilityManager.ESDirection direction, float fingerCount)
-        {
-            // TODO: Call "Vibrate(type)" with a type here!!
-            // Vibrate(milliseconds: (long) duration, type);
-        }
         
         protected virtual void LoadOptionsSaved()
         {
@@ -151,13 +132,30 @@ namespace VibrationPlugin
                 Debug.LogWarningFormat("[{0}] The parameter '{1}' is required to be defined in inspector", TAG, nameof(options));
             }
 
-            if (PlayerPrefs.HasKey(options.GetType().Name))
+            if (!PlayerPrefs.HasKey(options.GetType().Name))
             {
-                string jsonOptions = PlayerPrefs.GetString(options.GetType().Name);
-
-                // Not use JsonUtility.FromJson() to ScriptableObject or MonoBehaviour objects
-                JsonUtility.FromJsonOverwrite(jsonOptions, options);
+                return;
             }
+            
+            var jsonOptions = PlayerPrefs.GetString(options.GetType().Name);
+
+            // Not use JsonUtility.FromJson() to ScriptableObject or MonoBehaviour objects
+            JsonUtility.FromJsonOverwrite(jsonOptions, options);
+        }
+        
+        /// <summary>
+        /// Check if the <paramref name="milliseconds"/> and a <see cref="VibrationType"/>
+        /// match with "default" values.
+        /// </summary>
+        /// <param name="milliseconds">Duration of vibration in milliseconds</param>
+        /// <param name="vibrationType"><see cref="VibrationType"/> to be verified the default value</param>
+        /// <returns></returns>
+        [SuppressMessage("ReSharper", "MemberCanBeMadeStatic.Global")]
+        [SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
+        public bool IsDefault(long? milliseconds = null, VibrationType vibrationType = VibrationType.None)
+        {
+            return vibrationType == VibrationType.HandheldDefault ||
+                   (milliseconds is null or 0 && vibrationType == VibrationType.None);
         }
 
         ///<summary>
@@ -209,19 +207,24 @@ namespace VibrationPlugin
             #endif
         }
 
-        public virtual void Vibrate()
-        {
-            Vibration.Vibrate();
-        }
-
-        public virtual void Vibrate(long milliseconds)
+        public virtual void Vibrate(long? milliseconds = null, VibrationType vibrationType = VibrationType.None)
         {
             if (!IsEnabled)
             {
                 return;
             }
 
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            if (IsDefault(milliseconds, vibrationType))
+            {
+                #if !UNITY_WEBGL
+                
+                Vibration.Vibrate();
+                return;
+                
+                #endif
+            }
+
+            #if UNITY_ANDROID
             
             AndroidJNIHelper.debug = true;
 
@@ -230,65 +233,23 @@ namespace VibrationPlugin
                 return;
             }
             
-            AndroidJavaObject audioAttributes = audioAttributesBuilder.Call<AndroidJavaObject>("build"); 
-            AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibrate", milliseconds, (int) type, audioAttributes);
+            durationLongObj = new AndroidJavaObject("java.lang.Long", milliseconds);
+            var result = vibrationPlugin.Call<AndroidJavaObject>("vibrate", durationLongObj, (int) vibrationType);
 
             if (result != null && Debug.isDebugBuild)
             {
                 // TODO: Add a UI text in the scene, with the log below when generate a Development Build
                 // To see this log, connect your phone with the USB cable, open Android Studio => LogCat panel
-                
-                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, EFFECT: ${this.type}");
+                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, EFFECT: ${vibrationType}");
             }
             
             #elif UNITY_IOS && !UNITY_EDITOR
             
-            Handheld.Vibrate();
+            Vibration.Vibrate();
             
-            #endif
-        }
-        
-        public virtual void Vibrate(VibrationType vibrationType)
-        {
-            if (!IsEnabled)
-            {
-                return;
-            }
+            #elif UNITY_WEBGL
 
-            #if UNITY_ANDROID && !UNITY_EDITOR
-            
-            AndroidJNIHelper.debug = true;
-
-            if (vibrationPlugin == null)
-            {
-                return;
-            }
-            
-            AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibrate", (int) vibrationType, null);
-
-            if (result != null && Debug.isDebugBuild)
-            {
-                // To see this log, connect your phone with the USB cable, open Android Studio => LogCat panel
-                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, EFFECT: ${this.type}");
-            }
-            
-            #elif UNITY_IOS && !UNITY_EDITOR
-            
-            Handheld.Vibrate();
-            
-            #endif
-        }
-
-        public virtual void Vibrate(long milliseconds, VibrationType vibrationType)
-        {
-            #if UNITY_ANDROID && !UNITY_EDITOR
-
-            type = vibrationType;
-            Vibrate(milliseconds);
-
-            #elif UNITY_IOS && !UNITY_EDITOR
-
-            Handheld.Vibrate();
+            Vibration.Vibrate(Convert.ToInt32(milliseconds), (int) vibrationType);
 
             #endif
         }
@@ -296,7 +257,12 @@ namespace VibrationPlugin
         public virtual void Vibrate(long milliseconds, MobileTimeUnit timeUnit)
         {
             
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            if (!IsEnabled)
+            {
+                return;
+            }
+            
+            #if UNITY_ANDROID
             
             AndroidJNIHelper.debug = true;
 
@@ -305,13 +271,13 @@ namespace VibrationPlugin
                 return;
             }
                 
-            AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibrateWithTimeUnit", milliseconds, timeUnit.ToString());
+            durationLongObj = new AndroidJavaObject("java.lang.Long", milliseconds);
+            AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibrateWithTimeUnit", durationLongObj, timeUnit.ToString());
             
             if (result != null && Debug.isDebugBuild)
             {
                 // To see this log, connect your phone with the USB cable, open Android Studio => LogCat panel
-                
-                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, EFFECT: ${this.type}");
+                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, ${nameof(timeUnit)}: ${timeUnit}");
             }
 
             #elif UNITY_IOS && !UNITY_EDITOR
@@ -339,7 +305,7 @@ namespace VibrationPlugin
                 return;
             }
             
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            #if UNITY_ANDROID
             
             AndroidJNIHelper.debug = true;
 
@@ -348,25 +314,29 @@ namespace VibrationPlugin
                 return;
             }
 
-            AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibrate", pattern, (int) repeat, null);
+            AndroidJavaObject result = vibrationPlugin.Call<AndroidJavaObject>("vibrate", pattern, (int) repeat);
         
             if (result != null && Debug.isDebugBuild)
             {
                 // To see this log, connect your phone with the USB cable, open Android Studio => LogCat panel
-                
-                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, EFFECT: ${this.type}");
+                Debug.Log($"[{TAG}] RESULT: ${result.Call<string>("toString")}, ${nameof(pattern)}: ${pattern}, ${nameof(repeat)}: ${repeat}");
             }
 
+            #elif UNITY_WEBGL
+
+            var intPattern = Array.ConvertAll(pattern, Convert.ToInt32);
+            Vibration.VibrateWithPattern(intPattern, intPattern.Length, (int) type);
+
             #elif UNITY_IOS && !UNITY_EDITOR
-
-            Handheld.Vibrate();
-
+            
+            Vibration.Vibrate();
+            
             #endif
         }
 
         public virtual bool HasVibrator()
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            #if UNITY_ANDROID
             
             if (vibrationPlugin == null)
             {
@@ -380,14 +350,16 @@ namespace VibrationPlugin
 
             return Vibration.HasVibrator();
 
-            #endif
-
+            #else
+            
             return false;
+            
+            #endif
         }
 
         public virtual bool IsEffectSupported(int effectId)
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            #if UNITY_ANDROID
             
             if (vibrationPlugin == null)
             {
@@ -405,7 +377,7 @@ namespace VibrationPlugin
         }
         public virtual bool IsPrimitiveSupported(int primitiveId)
         {
-            #if UNITY_ANDROID && !UNITY_EDITOR
+            #if UNITY_ANDROID
             
             if (vibrationPlugin == null)
             {
@@ -433,6 +405,10 @@ namespace VibrationPlugin
 
             vibrationPlugin.Call("cancel");
 
+            #elif UNITY_WEBGL
+            
+            Vibration.VibrateCancel();
+            
             #endif
         }
     }

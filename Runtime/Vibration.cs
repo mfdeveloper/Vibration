@@ -7,42 +7,64 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 using UnityEngine;
-#if UNITY_IOS && !UNITY_EDITOR
-using System.Collections;
+#if UNITY_WEBGL || (UNITY_IOS && !UNITY_EDITOR)
 using System.Runtime.InteropServices;
+using System.Collections;
 #endif
+using VibrationPlugin.Enums;
 
 namespace VibrationPlugin
 {
 	public static class Vibration
 	{
-#if UNITY_IOS && !UNITY_EDITOR
-    [DllImport ( "__Internal" )]
-    private static extern bool _HasVibrator ();
+		#if UNITY_IOS && !UNITY_EDITOR
+		
+	    [DllImport ( "__Internal" )]
+	    private static extern bool _HasVibrator ();
 
-    [DllImport ( "__Internal" )]
-    private static extern void _Vibrate ();
+	    [DllImport ( "__Internal" )]
+	    private static extern void _Vibrate ();
 
-    [DllImport ( "__Internal" )]
-    private static extern void _VibratePop ();
+	    [DllImport ( "__Internal" )]
+	    private static extern void _VibratePop ();
 
-    [DllImport ( "__Internal" )]
-    private static extern void _VibratePeek ();
+	    [DllImport ( "__Internal" )]
+	    private static extern void _VibratePeek ();
 
-    [DllImport ( "__Internal" )]
-    private static extern void _VibrateNope ();
-#endif
+	    [DllImport ( "__Internal" )]
+	    private static extern void _VibrateNope ();
+		
+		#endif
+
+		#if UNITY_WEBGL
+				
+		[DllImport("__Internal")]
+		public static extern void Vibrate(int milliseconds, int typeValue = (int) VibrationType.None);
+        
+		[DllImport("__Internal")]
+		public static extern void VibrateWithPattern(int[] pattern, int patternSize, int typeValue = (int) VibrationType.None);
+        
+		[DllImport("__Internal")]
+		public static extern void VibrateCancel();
+		
+		#endif
 
 		///<summary>
 		/// Tiny pop vibration
 		///</summary>
 		public static void VibratePop()
 		{
-#if UNITY_IOS && !UNITY_EDITOR
-        _VibratePop ();
-#elif UNITY_ANDROID && !UNITY_EDITOR
-		Vibrate(15);
-#endif
+			
+			#if UNITY_IOS && !UNITY_EDITOR
+			
+	        _VibratePop ();
+				
+			#elif UNITY_ANDROID && !UNITY_EDITOR
+			
+			Vibrate(15);
+			
+			#endif
+			
 		}
 
 		///<summary>
@@ -50,11 +72,16 @@ namespace VibrationPlugin
 		///</summary>
 		public static void VibratePeek()
 		{
-#if UNITY_IOS && !UNITY_EDITOR
-        _VibratePeek ();
-#elif UNITY_ANDROID && !UNITY_EDITOR
-		Vibrate ( 25 );
-#endif
+			#if UNITY_IOS && !UNITY_EDITOR
+			
+			_VibratePeek ();
+				
+			#elif UNITY_ANDROID && !UNITY_EDITOR
+			
+			Vibrate ( 25 );
+				
+			#endif
+			
 		}
 
 		///<summary>
@@ -62,33 +89,45 @@ namespace VibrationPlugin
 		///</summary>
 		public static void VibrateNope()
 		{
-#if UNITY_IOS && !UNITY_EDITOR
-        _VibrateNope ();
-#elif UNITY_ANDROID && !UNITY_EDITOR
-		long [] pattern = { 0, 5, 5, 5 };
-		Vibrate( pattern, -1 );
-#endif
+			#if UNITY_IOS && !UNITY_EDITOR
+			
+			_VibrateNope ();
+			
+			#elif UNITY_ANDROID && !UNITY_EDITOR
+			
+			long [] pattern = { 0, 5, 5, 5 };
+			Vibrate( pattern, -1 );
+			
+			#endif
 		}
 
-#if UNITY_ANDROID && !UNITY_EDITOR
-	public static AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-	public static AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-	public static AndroidJavaObject vibrator = currentActivity.Call<AndroidJavaObject>("getSystemService", "vibrator");
-	public static AndroidJavaObject context = currentActivity.Call<AndroidJavaObject>("getApplicationContext");
-#endif
+		#if UNITY_ANDROID && !UNITY_EDITOR
+		
+		public static AndroidJavaClass unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+		public static AndroidJavaObject currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+		public static AndroidJavaObject vibrator = currentActivity.Call<AndroidJavaObject>("getSystemService", "vibrator");
+		public static AndroidJavaObject context = currentActivity.Call<AndroidJavaObject>("getApplicationContext");
+		
+		#endif
+		
 		///<summary>
 		/// Only on Android
 		/// https://developer.android.com/reference/android/os/Vibrator.html#vibrate(long)
 		///</summary>
 		public static void Vibrate(long milliseconds)
 		{
-#if !UNITY_WEBGL
-#if UNITY_ANDROID && !UNITY_EDITOR
-			vibrator.Call("vibrate", milliseconds);
-#elif UNITY_IOS && !UNITY_EDITOR
-			Handheld.Vibrate();
-#endif
-#endif
+			#if !UNITY_WEBGL
+			
+				#if UNITY_ANDROID && !UNITY_EDITOR
+
+				vibrator.Call("vibrate", milliseconds);
+
+				#elif UNITY_IOS && !UNITY_EDITOR
+
+				Handheld.Vibrate();
+
+				#endif
+			#endif
 		}
 
 		///<summary>
@@ -97,13 +136,19 @@ namespace VibrationPlugin
 		///</summary>
 		public static void Vibrate(long[] pattern, int repeat)
 		{
-#if !UNITY_WEBGL
-#if UNITY_ANDROID && !UNITY_EDITOR
-			vibrator.Call("vibrate", pattern, repeat);
-#elif UNITY_IOS && !UNITY_EDITOR
-			Handheld.Vibrate();
-#endif
-#endif
+			#if !UNITY_WEBGL
+			
+				#if UNITY_ANDROID && !UNITY_EDITOR
+
+				vibrator.Call("vibrate", pattern, repeat);
+
+				#elif UNITY_IOS && !UNITY_EDITOR
+
+				Handheld.Vibrate();
+
+				#endif
+			
+			#endif
 		}
 
 		///<summary>
@@ -111,37 +156,53 @@ namespace VibrationPlugin
 		///</summary>
 		public static void Cancel()
 		{
-#if UNITY_ANDROID && !UNITY_EDITOR
-		vibrator.Call("cancel");
-#endif
+			#if UNITY_ANDROID && !UNITY_EDITOR
+			
+			vibrator.Call("cancel");
+			
+			#endif
 		}
 
 		public static bool HasVibrator()
 		{
-#if UNITY_ANDROID && !UNITY_EDITOR
-		AndroidJavaClass contextClass = new AndroidJavaClass("android.content.Context");
-		string Context_VIBRATOR_SERVICE = contextClass.GetStatic<string>("VIBRATOR_SERVICE");
-		AndroidJavaObject systemService = context.Call<AndroidJavaObject>("getSystemService", Context_VIBRATOR_SERVICE);
-		if (systemService.Call<bool>("hasVibrator"))
-		{
-			return true;
-		}
-		else
-		{
+			#if UNITY_ANDROID && !UNITY_EDITOR
+			
+			AndroidJavaClass contextClass = new AndroidJavaClass("android.content.Context");
+			string Context_VIBRATOR_SERVICE = contextClass.GetStatic<string>("VIBRATOR_SERVICE");
+			AndroidJavaObject systemService = context.Call<AndroidJavaObject>("getSystemService", Context_VIBRATOR_SERVICE);
+			if (systemService.Call<bool>("hasVibrator"))
+			{
+				return true;
+			}
+			else
+			{
+				return false;
+			}
+			
+			#elif UNITY_IOS && !UNITY_EDITOR
+			
+			return _HasVibrator ();
+			
+			#else
+			
 			return false;
-		}
-#elif UNITY_IOS && !UNITY_EDITOR
-        return _HasVibrator ();
-#else
-			return false;
-#endif
+			
+			#endif
 		}
 
 		public static void Vibrate()
 		{
-#if !UNITY_WEBGL && (UNITY_ANDROID || UNITY_IOS)
-		Handheld.Vibrate();
-#endif
+			// TODO: [Improvement] Implement joystick vibration (e.g A player using a joystick on Steam)
+			if (Application.isConsolePlatform)
+			{
+				Handheld.Vibrate();
+			}
+			
+			#if !UNITY_WEBGL && (UNITY_ANDROID || UNITY_IOS)
+			
+			Handheld.Vibrate();
+			
+			#endif
 		}
 	}
 }

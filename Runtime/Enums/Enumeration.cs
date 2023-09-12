@@ -33,15 +33,15 @@ namespace VibrationPlugin.Enums
         
         public string Name { get; }
 
-        public int Id { get; }
+        public int Value { get; }
 
         static Enumeration()
         {
             AllValues = new Lazy<Dictionary<int, T>>(FetchAll);
         }
-        protected Enumeration(int id, string name) => (Id, Name) = (id, name);
+        protected Enumeration(string name, int value) => (Name, Value) = (name, value);
 
-        public override string ToString() => Name;
+        public override string ToString() => $"[${Name} => ${Value}]";
 
         public override bool Equals(object obj)
         {
@@ -51,7 +51,7 @@ namespace VibrationPlugin.Enums
             }
 
             var typeMatches = GetType() == obj.GetType();
-            var valueMatches = Id.Equals(otherValue.Id);
+            var valueMatches = Value.Equals(otherValue.Value);
 
             return typeMatches && valueMatches;
         }
@@ -60,15 +60,15 @@ namespace VibrationPlugin.Enums
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Name == other.Name && Id == other.Id;
+            return Name == other.Name && Value == other.Value;
         }
 
         public override int GetHashCode()
         {
-            return HashCode.Combine(Name, Id);
+            return HashCode.Combine(Name, Value);
         }
 
-        public int CompareTo(object other) => Id.CompareTo(((Enumeration<T>)other).Id);
+        public int CompareTo(object other) => Value.CompareTo(((Enumeration<T>)other).Value);
 
         // Other utility methods ...
         
@@ -78,7 +78,7 @@ namespace VibrationPlugin.Enums
                                 BindingFlags.DeclaredOnly)
                 .Select(fieldInfo => fieldInfo.GetValue(null))
                 .Cast<T>()
-                .ToDictionary(enumeration => enumeration.Id, enumeration => enumeration);
+                .ToDictionary(enumeration => enumeration.Value, enumeration => enumeration);
         
         public static IEnumerable<T> GetAll() => AllValues.Value.Values;
         
@@ -104,12 +104,12 @@ namespace VibrationPlugin.Enums
         
         public static bool operator ==(Enumeration<T> enumeration, int other)
         {
-            return enumeration?.Id == other;
+            return enumeration?.Value == other;
         }
 
         public static bool operator !=(Enumeration<T> enumeration, int other)
         {
-            return enumeration?.Id != other;
+            return enumeration?.Value != other;
         }
     }
 }

@@ -3,6 +3,8 @@
     public enum VibrationRepeat
     {
         NoRepeat = -1,
-        Forever = 0
+        Forever,
+        Once,
+        Twice
     }
 }

@@ -18,18 +18,6 @@ public class VibrationExample : MonoBehaviour
     public Text inputPattern;
     public Text inputRepeat;
 
-    // Use this for initialization
-    void Start ()
-    {
-
-    }
-
-    // Update is called once per frame
-    void Update ()
-    {
-
-    }
-
     public void TapVibrate ()
     {
         Vibration.Vibrate ();

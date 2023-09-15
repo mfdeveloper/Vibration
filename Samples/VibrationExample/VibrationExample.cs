@@ -6,6 +6,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,7 +18,25 @@ public class VibrationExample : MonoBehaviour
     public Text inputTime;
     public Text inputPattern;
     public Text inputRepeat;
+    public Text txtAndroidVersion;
 
+<<<<<<<< HEAD:Samples/VibrationExample/VibrationExample.cs
+========
+    // Use this for initialization
+    void Start ()
+    {
+        Vibration.Init ();
+        Debug.Log ( "Application.isMobilePlatform: " + Application.isMobilePlatform );
+        txtAndroidVersion.text = "Android Version: " + Vibration.AndroidVersion.ToString ();
+    }
+
+    // Update is called once per frame
+    void Update ()
+    {
+
+    }
+
+>>>>>>>> master:Vibration/Example/VibrationExample.cs
     public void TapVibrate ()
     {
         Vibration.Vibrate ();
@@ -25,21 +44,28 @@ public class VibrationExample : MonoBehaviour
 
     public void TapVibrateCustom ()
     {
-        Debug.Log ( inputTime.text );
-        Vibration.Vibrate ( int.Parse ( inputTime.text ) );
+#if UNITY_ANDROID
+        Vibration.VibrateAndroid ( int.Parse ( inputTime.text ) );
+#endif
     }
 
     public void TapVibratePattern ()
     {
-        long[] longs = inputPattern.text.Select ( item => ( long )item ).ToArray ();
-        Debug.Log ( longs + " " + int.Parse ( inputRepeat.text ) );
-        Vibration.Vibrate ( longs, int.Parse ( inputRepeat.text ) );
+        string[] patterns = inputPattern.text.Replace ( " ", "" ).Split ( ',' );
+        long[] longs = Array.ConvertAll<string, long> ( patterns, long.Parse );
+
+        Debug.Log ( longs.Length );
+        //Vibration.Vibrate ( longs, int.Parse ( inputRepeat.text ) );
+#if UNITY_ANDROID
+        Vibration.VibrateAndroid ( longs, int.Parse ( inputRepeat.text ) );
+#endif
     }
 
     public void TapCancelVibrate ()
     {
-
-        Vibration.Cancel ();
+#if UNITY_ANDROID
+        Vibration.CancelAndroid();
+#endif
     }
 
     public void TapPopVibrate ()

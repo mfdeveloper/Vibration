@@ -1,0 +1,20 @@
+{
+	"name": "com.benoitfreslon.vibration",
+	"author": "Benoit Freslon, AminSojoudi, SH42913",
+	"displayName": "Vibration",
+	"description": "Native free plugin for Unity for Android, iOS and WebGL. Use custom vibrations/haptics on mobile.",
+	"unity": "2019.3",
+	"version": "0.1.0",
+	"keywords": [],
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/BenoitFreslon/Vibration"
+	},
+	"samples": [
+		{
+			"displayName": "Vibration Example",
+			"description": "A basic scene with vibration example",
+			"path": "Samples~/VibrationExample"
+		}
+	]
+}

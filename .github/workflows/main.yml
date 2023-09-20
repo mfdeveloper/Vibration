@@ -2,38 +2,41 @@ name: Unity Package CI
 on:
   push:
     branches:
-    - upm-android-haptics
+    - upm-package-embedded
+  repository_dispatch:
+    types: [on-demand-test]
 env:
-    PKG_ROOT: ./
+  PKG_BRANCH: upm
+  PKG_NAME: com.benoitfreslon.vibration
+  PKG_ROOT: ./
 jobs:
   split-upm:
-    name: Split upm branch (force)
+    name: Create upm package branch (force)
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
-    - name: Split package folder to upm branch
-      run: |
-        if [ "$PKG_ROOT" == "./" ]
-        then
-          git checkout -b upm
-        else
-          git subtree split -P "$PKG_ROOT" -b upm
-        fi 
-    - name: Create samples~ folder
-      run: |
-        git checkout upm
-        if [[ -d "Samples" ]]; then
-          git mv Samples Samples~
-          rm -f Samples.meta
-          git config --global user.name 'github-bot'
-          git config --global user.email 'github-bot@users.noreply.github.com'
-          git commit -am "fix: Samples => Samples~"
-        fi
-    - name: Push changes to upm branch
-      uses: ad-m/github-push-action@master
-      with:
-        force: true
-        branch: upm
-        github_token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set output git tag and commit message
+        id: vars
+        run: ./.github/scripts/functions.sh githubActionsVariables
+      - name: Check output git variables
+        env:
+          LAST_RELEASE_TAG: ${{ steps.vars.outputs.tag }}
+          COMMIT_MESSAGE: ${{ steps.vars.outputs.commit_message }}
+        run: |
+          echo $LAST_RELEASE_TAG
+          echo $COMMIT_MESSAGE
+      - name: Checkout orphan [${{ env.PKG_BRANCH }}] branch
+        run: |
+          git checkout --orphan "$PKG_BRANCH"
+          shopt -s extglob dotglob
+          rm -rf !(Packages|.github|.git|README.md|README.md.meta|LICENSE|LICENSE.meta|.|..)
+          ls -la ./
+      - name: Move ./Packages content to root
+        run: ./.github/scripts/functions.sh movePackagesFolder
+      - name: Create Samples~ and Documentation~ folders
+        run: ./.github/scripts/functions.sh push
+        env:
+          LAST_RELEASE_TAG: ${{ steps.vars.outputs.tag }}
+          COMMIT_MESSAGE: ${{ steps.vars.outputs.commit_message }}

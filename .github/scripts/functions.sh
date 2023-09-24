@@ -10,11 +10,16 @@ packageVersion() {
     echo $VERSION
 }
 
+# @description Add github actions state and output variables to be handled on .yml workflow files
+#
+# @see [shdoc](https://github.com/reconquest/shdoc)
+# @see [Deprecating save-state and set-output commands](https://github.blog/changelog/2022-10-11-github-actions-deprecating-save-state-and-set-output-commands)
 githubActionsOutputs() {
     CURRENT_TAG=$(git describe --tags $(git rev-list --tags --max-count=1))
     COMMIT_MESSAGE=$(git log -1 --pretty=%B)
-    echo ::set-output name=tag::$CURRENT_TAG
-    echo ::set-output name=commit_message::$COMMIT_MESSAGE
+    # Use the format {name}={value} instead of ::set-output
+    echo "{tag}={$CURRENT_TAG}" >> $GITHUB_OUTPUT
+    echo "{commit_message}={$COMMIT_MESSAGE}" >> $GITHUB_OUTPUT
 }
 
 copyPackagesContent() {

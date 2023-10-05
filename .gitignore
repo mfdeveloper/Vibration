@@ -232,7 +232,10 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
+# Used as ".env.defaults" and commited to repository)
+# use the others files below to store local only values,
+# such as: tokens, credentials...
+# .env
 .env.development.local
 .env.test.local
 .env.production.local

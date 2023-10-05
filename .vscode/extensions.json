@@ -1,6 +1,7 @@
 {
     "recommendations": [
         "xabikos.javascriptsnippets",
-        "visualstudiotoolsforunity.vstuc"
+        "wayou.vscode-todo-highlight",
+        "visualstudiotoolsforunity.vstuc",
     ]
 }

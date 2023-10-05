@@ -4,11 +4,23 @@
 	"displayName": "Vibration",
 	"description": "Native free plugin for Unity for Android, iOS and WebGL. Use custom vibrations/haptics on mobile.",
 	"unity": "2019.3",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"keywords": [],
+	"devDependencies": {
+		"cross-var": "^1.1.0",
+		"dotenv-cli": "^7.3.0"
+	},
+	"scripts": {
+		"prepublishOnly": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh localBeforePublish $REPOSITORY_ROOT\"",
+		"package:rename-dirs": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh renameInvalidDirs .\"",
+		"package:copy-files": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh copyFilesForPublish .\""
+	},
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/BenoitFreslon/Vibration"
+		"url": "https://github.com/mfdeveloper/Vibration.git"
+	},
+	"publishConfig": {
+		"registry": "https://npm.pkg.github.com/@mfdeveloper"
 	},
 	"samples": [
 		{

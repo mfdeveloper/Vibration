@@ -6,7 +6,8 @@
   "scripts": {
     "start": "http-server ./Builds/WebGL -c-1 --gzip",
     "start:ghpage": "http-server ./demo -c-1 --gzip",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "publish:package": "dotenv bash ./.github/scripts/functions.sh localPublish Packages/com.benoitfreslon.vibration"
   },
   "repository": {
     "type": "git",
@@ -19,6 +20,7 @@
   },
   "homepage": "https://github.com/BenoitFreslon/Vibration#readme",
   "devDependencies": {
+    "dotenv-cli": "^7.3.0",
     "http-server": "^14.1.1"
   }
 }

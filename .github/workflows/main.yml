@@ -10,7 +10,7 @@ env:
   # from: https://github.com/[profile]/[repository]/settings/variables/actions
   PKG_BRANCH: upm
   PKG_NAME: com.benoitfreslon.vibration
-  PKG_ROOT: ./
+  PKG_ROOT: '.'
   EXCLUDE_REMOVE_FILES: '!(Packages|.github|.git|README.md|README.md.meta|LICENSE|LICENSE.meta|Images|Images.meta|.|..)'
 jobs:
   split-upm:
@@ -25,11 +25,11 @@ jobs:
         run: ./.github/scripts/functions.sh githubActionsVariables
       - name: Check output git variables
         env:
-          LAST_RELEASE_TAG: ${{ steps.vars.outputs.tag }}
-          COMMIT_MESSAGE: ${{ steps.vars.outputs.commit_message }}
+          LAST_RELEASE_TAG: ${{ steps.vars.outputs.TAG }}
+          COMMIT_MESSAGE: ${{ steps.vars.outputs.COMMIT_MESSAGE }}
         run: |
-          echo $LAST_RELEASE_TAG
-          echo $COMMIT_MESSAGE
+          echo "[LAST TAG] $LAST_RELEASE_TAG"
+          echo "[COMMIT MESSAGE] $COMMIT_MESSAGE"
       - name: Checkout orphan [${{ env.PKG_BRANCH }}] branch
         run: |
           git checkout --orphan "$PKG_BRANCH"
@@ -41,5 +41,5 @@ jobs:
       - name: Create Samples~ and Documentation~ folders
         run: ./.github/scripts/functions.sh push
         env:
-          LAST_RELEASE_TAG: ${{ steps.vars.outputs.tag }}
-          COMMIT_MESSAGE: ${{ steps.vars.outputs.commit_message }}
+          LAST_RELEASE_TAG: ${{ steps.vars.outputs.TAG }}
+          COMMIT_MESSAGE: ${{ steps.vars.outputs.COMMIT_MESSAGE }}

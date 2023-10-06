@@ -1,0 +1,45 @@
+name: Unity Package CI
+on:
+  push:
+    branches:
+    - upm-package-embedded
+  repository_dispatch:
+    types: [on-demand-test]
+env:
+  # PS: You can define github action variables in a repository, without modify this file
+  # from: https://github.com/[profile]/[repository]/settings/variables/actions
+  PKG_BRANCH: upm
+  PKG_NAME: com.benoitfreslon.vibration
+  PKG_ROOT: './'
+  EXCLUDE_REMOVE_FILES: '!(Packages|.github|.git|README.md|README.md.meta|LICENSE|LICENSE.meta|Images|Images.meta|.|..)'
+jobs:
+  split-upm:
+    name: Create upm package branch (force)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set output git tag and commit message
+        id: vars
+        run: ./.github/scripts/functions.sh githubActionsVariables
+      - name: Check output git variables
+        env:
+          LAST_RELEASE_TAG: ${{ steps.vars.outputs.TAG }}
+          COMMIT_MESSAGE: ${{ steps.vars.outputs.COMMIT_MESSAGE }}
+        run: |
+          echo "[LAST TAG] $LAST_RELEASE_TAG"
+          echo "[COMMIT MESSAGE] $COMMIT_MESSAGE"
+      - name: Checkout orphan [${{ env.PKG_BRANCH }}] branch
+        run: |
+          git checkout --orphan "$PKG_BRANCH"
+          shopt -s extglob dotglob
+          rm -rf $EXCLUDE_REMOVE_FILES
+          ls -la ./
+      - name: Move ./Packages content to root
+        run: ./.github/scripts/functions.sh movePackagesFolder
+      - name: Create Samples~ and Documentation~ folders
+        run: ./.github/scripts/functions.sh push
+        env:
+          LAST_RELEASE_TAG: ${{ steps.vars.outputs.TAG }}
+          COMMIT_MESSAGE: ${{ steps.vars.outputs.COMMIT_MESSAGE }}

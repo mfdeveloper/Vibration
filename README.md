@@ -28,6 +28,15 @@ Install the [OpenUPM](https://openupm.com) CLI and add the [com.benoitfreslon.vi
 
 ```bash
 
+# Install node (e.g using NVM)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+# "node" is an alias for the latest version
+nvm install node
+# You can list available versions using "ls-remote"
+nvm ls-remote
+# or 16.3.0, 12.22.1, etc
+nvm install 14.7.0
+
 # Install openupm-cli
 npm install -g openupm-cli
 
@@ -283,9 +292,11 @@ vibration using haptic engine
 
 ### Publish (Github Packages)
 
-1. Generate a [Github access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
+1. Install `node` (e.g using [NVM](https://github.com/nvm-sh/nvm))
 
-2. Authenticate using the generated TOKEN:
+2. Generate a [Github access token (classic)](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#creating-a-personal-access-token-classic)
+
+3. Authenticate using the generated TOKEN:
 
    Create a user `$HOME/.npmrc` file
 
@@ -303,7 +314,7 @@ vibration using haptic engine
     export GITHUB_TOKEN=<GITHUB_TOKEN>
     ```
 
-3. Publish the package with [npm publish](https://docs.npmjs.com/cli/v9/commands/npm-publish)
+4. Publish the package with [npm publish](https://docs.npmjs.com/cli/v9/commands/npm-publish)
 
     From [`[upm-package-embedded]`](https://github.com/mfdeveloper/Vibration/tree/upm-package-embedded) git branch
 
@@ -314,18 +325,43 @@ vibration using haptic engine
 
     # Run the npm scripts
     npm install
+    npm run pack:package # Pack in a .tgz for testing (optional)
     npm run publish:package # Publish from repository ROOT path
 
     cd Packages/com.benoitfreslon.vibration 
-    npm publish # Publish from package path
+    npm package:publish-from-local # Publish from package path
+    npm publish:from-local # Or use this another script alias for publishing (optional)
     ``````
+
+    > **WARNING:** Avoid use the common **`npm publish`** directly, because the hooks `prepare`, `prepublish` ... aren't triggered in this package. They have conflicts with [OpenUPM Azure pipelines](https://dev.azure.com/openupm/openupm/_build?definitionId=1&_a=summary) and fail when try run automation publishing tags to OpenUPM :(
+
+#### NPM Scripts (optional)
+
+Optionally, you can run specific npm scripts inside of `Packages/<PACKAGE_NAME>` or from **`[upm]`** branch:
+
+```bash
+# Go to the package dir
+cd Packages/com.benoitfreslon.vibration
+
+# Pack a .tgz for testing (optional)
+npm run package:pack
+
+# Run the publish script (with $PUBLISH_FORCE environment variable)
+npm run package:publish-from-local
+# Alias script to "package:publish-from-local" above
+npm run publish:from-local
+# Or simply run the command line below from any unix-like bash terminal
+# (e.g from Git bash on Windows)
+PUBLISH_FORCE=1 && npm run package:prepare && npm publish
+```
 
 ### Publish (OpenUPM)
 
 1. Bump the version with a new Github release or Git tag
+    > **PS:** Avoid change/rewrite a existent git tag. If you really need do that, create a new issue on Github repo => [openupm: Unpublish a Package Version](https://github.com/openupm/openupm/issues/new?title=Unpublish%20package%20version&template=unpublish_version.md)
 2. The changes should be reflected in: [https://openupm.com/packages/com.benoitfreslon.vibration](https://openupm.com/packages/com.benoitfreslon.vibration)
 
-    > **See:** [Modifying UPM Package](https://openupm.com/docs/modifying-upm-package.html#modifying-upm-package)
+> **See:** [Modifying UPM Package](https://openupm.com/docs/modifying-upm-package.html#modifying-upm-package)
 
 ## References
 

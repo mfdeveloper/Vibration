@@ -4,16 +4,19 @@
 	"displayName": "Vibration",
 	"description": "Native free plugin for Unity for Android, iOS and WebGL. Use custom vibrations/haptics on mobile.",
 	"unity": "2019.3",
-	"version": "0.1.1",
+	"version": "0.1.3",
 	"keywords": [],
 	"devDependencies": {
 		"cross-var": "^1.1.0",
 		"dotenv-cli": "^7.3.0"
 	},
 	"scripts": {
-		"prepublishOnly": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh localBeforePublish $REPOSITORY_ROOT\"",
 		"package:rename-dirs": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh renameInvalidDirs .\"",
-		"package:copy-files": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh copyFilesForPublish .\""
+		"package:copy-files": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh copyFilesForPublish .\"",
+		"package:prepare": "dotenv cross-var \"bash $REPOSITORY_ROOT/.github/scripts/functions.sh localBeforePublish $REPOSITORY_ROOT\"",
+		"package:pack": "npm run package:prepare && npm pack",
+		"package:publish-from-local": "dotenv -v PUBLISH_FORCE=1 npm run package:prepare && npm publish",
+		"publish:from-local": "npm run package:publish-from-local"
 	},
 	"repository": {
 		"type": "git",

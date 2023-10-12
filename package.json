@@ -1,7 +1,7 @@
 {
   "name": "com.benoitfreslon.vibration.example-project",
   "version": "0.0.1",
-  "description": "An example/demo project to develop and test the Vibration plugin",
+  "description": "An example/demo project to develop and test the Vibration plugin (e.g WebGL demos)",
   "main": "index.js",
   "scripts": {
     "start": "http-server ./Builds/WebGL -c-1 --gzip",
@@ -13,11 +13,11 @@
     "type": "git",
     "url": "git+https://github.com/BenoitFreslon/Vibration.git"
   },
-  "author": "Benoit Freslon, AminSojoudi, SH42913",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/BenoitFreslon/Vibration/issues"
   },
+  "author": "Benoit Freslon, AminSojoudi, SH42913",
+  "license": "MIT",
   "homepage": "https://github.com/BenoitFreslon/Vibration#readme",
   "devDependencies": {
     "dotenv-cli": "^7.3.0",

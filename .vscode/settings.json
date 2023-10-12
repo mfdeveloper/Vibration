@@ -1,5 +1,7 @@
 {
     "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "dotnet.preferCSharpExtension": true,
+    "dotnetAcquisitionExtension.enableTelemetry": false,
     "files.associations": {
         "*.jspre": "javascript",
         "*.jslib": "javascript"

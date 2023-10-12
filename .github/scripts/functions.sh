@@ -75,24 +75,10 @@ githubActionsOutputs() {
 #   copyPackagesContent
 #   # result: Copy "Packages/<PACKAGE_NAME>/*.*" to ROOT/
 copyPackagesContent() {
-    #shopt -s extglob dotglob
-
-    # Preserve .env file from $PKG_ROOT
-    # if [ -f "$PKG_ROOT/.env"]
-    # then
-    #     mkdir "$PKG_ROOT/tmp"
-    #     mv "$PKG_ROOT/.env" "$PKG_ROOT/tmp"
-    # fi
+    shopt -s extglob dotglob
 
     cp -rvf "Packages/$PKG_NAME/." "$PKG_ROOT/"
     rm -rf ./Packages
-
-     # Move .env to $PKG_ROOT
-    # if [ -f "$PKG_ROOT/tmp/.env"]
-    # then
-    #     mv -f "$PKG_ROOT/tmp/.env" "$PKG_ROOT/"
-    #     rm -rf "$PKG_ROOT/tmp"
-    # fi
 }
 
 # TODO: Move this common function to another script file in order to reuse (e.g .github/scripts/common.sh)
@@ -137,6 +123,7 @@ renameInvalidDirs() {
 #
 # @see $PKG_BRANCH
 # @see renameInvalidDirs()
+# @see fixEnvFile()
 commitAndPush() {
     # Incrementing LAST_RELEASE_TAG+1.
     # Keep here just to store the history, and if need this to the future/others repositories
@@ -180,22 +167,21 @@ commitAndPush() {
 copyFilesForPublish() {
     local repository_root=$1
 
+    # $PKG_ROOT environment variable check
+    checkPkgRoot $2
+    local pkg_root_full_path=$(realpath $PKG_ROOT)
+
     if [ -z "$repository_root" ]
     then
-        echo "[COPY FILES] The parameter \$1 => \$repository_root is required: $repository_root"
+        echo "[COPY FILES] The parameter \$1 => \$repository_root is required: '$repository_root'"
         return 1
     else
         if [[ "$repository_root" =~ \.$ ]]
         then
             repository_root="$repository_root/"
         fi
-        echo "[COPY FILES] \$repository_root: $repository_root"
     fi
 
-    # $PKG_ROOT environment variable check
-    checkPkgRoot $2
-
-    local pkg_root_full_path=$(realpath $PKG_ROOT)
     if [[ $repository_root == $pkg_root_full_path ]]
     then
         echo "[COPY FILES] Cannot copy a directory FROM: \$repository_root => '$repository_root' to \$PKG_ROOT => '$pkg_root_full_path', into itself"
@@ -203,6 +189,8 @@ copyFilesForPublish() {
     fi
 
     chmod -R 777 "$PKG_ROOT/"
+
+    echo "[COPY FILES] From \$repository_root: '$(realpath $repository_root)', to => \$PKG_ROOT: '$pkg_root_full_path'"
 
     local files_copy=(README.md README.md.meta LICENSE LICENSE.meta Images Images.meta)
     for file_name in "${files_copy[@]}"
@@ -225,21 +213,45 @@ copyFilesForPublish() {
 # @arg $2 string A path configured as "$PKG_ROOT" environment variable to be used as 
 #                root path of the package
 #
+# @arg $3 string A flag configured as "$PUBLISH_FORCE" environment variable to force 
+#                publish from "./" root path (usually when publishing packages from a local repo)
+#
 # @see $PKG_ROOT
+# @see $PUBLISH_FORCE
 # @see renameInvalidDirs($PKG_ROOT)
 # @see copyFilesForPublish($1)
+# @see [Using Boolean Variables in Shell Scripts](https://tecadmin.net/boolean-variable-in-shell-script)
 localBeforePublish() {
     local repository_root=$1
-
-    if [ -d $repository_root ] && [[ $repository_root != "./" && $repository_root != "." ]]
+    local publish_forced='false'
+    
+    # Check if publish "force" is true
+    if [ -z "$PUBLISH_FORCE" ]
     then
+        PUBLISH_FORCE=$3
+        if [ -z "$PUBLISH_FORCE" ]
+        then
+            PUBLISH_FORCE=0
+        fi
+    fi
+
+    if [ $PUBLISH_FORCE -eq 1 ]
+    then
+        publish_forced='true'
+    fi
+
+    if [ -d $repository_root ] && [[ $repository_root != "./" && $repository_root != "." || $PUBLISH_FORCE -eq 1 ]]
+    then
+
+        echo "[PUBLISH: BEFORE/PRE] Forced => '$publish_forced'"
+
         # $PKG_ROOT environment variable check
         checkPkgRoot $2
 
         renameInvalidDirs $PKG_ROOT
         copyFilesForPublish $repository_root
     else
-        echo "[PRE PUBLISH] [Skip] Bypass package preparation because \$1 : \$repository_root => '$repository_root' is invalid"
+        echo "[PUBLISH: BEFORE/PRE] [Skip] Bypass package preparation because \$1 : \$repository_root => '$repository_root' is invalid"
     fi
 }
 
@@ -255,7 +267,7 @@ localPublish() {
     checkPkgRoot $1
 
     cd $PKG_ROOT
-    npm publish
+    npm run package:prepare && npm publish
 }
 
 run() {

@@ -1,0 +1,21 @@
+{
+    "name": "Vibration.Editor.Tests",
+    "rootNamespace": "VibrationPlugin.EditorTests",
+    "references": [
+        "GUID:742764898e7ebba4c94b9d41bbb0f72c"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

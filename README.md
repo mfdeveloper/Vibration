@@ -18,7 +18,7 @@ Send tips to <https://paypal.me/UnityVibrationPlugin>
 
 - <img src="./Images/Icons/android-icon.png" alt="Aimeos logo" title="Android" align="center" height="32" /> Android
 - <img src="./Images/Icons/ios-icon.png" alt="Aimeos logo" title="iOS" align="center" height="32" /> iOS
-- <img src="./Images/Icons/webgl-icon.png" alt="Aimeos logo" title="iOS" align="center" height="32" /> <a href="https://caniuse.com/webgl2"> WebGL </a> (some limitations apply on Mobile)
+- <img src="./Images/Icons/webgl-icon.png" alt="Aimeos logo" title="iOS" align="center" height="32" /> [WebGL](https://caniuse.com/webgl2) (some limitations apply on Mobile)
 
 ## Installation
 
@@ -121,7 +121,7 @@ You also can edit `Packages/manifest.json` manually, just add:
 
 - `"com.benoitfreslon.vibration": "https://github.com/BenoitFreslon/Vibration.git#<LATEST_VERSION>",`
 
-Or you can simply copy and paste the entire `[upm]` branch content from this repo, to your Unity3D `Packages/com.benoitfreslon.vibration` folder.
+Or you can simply copy and paste the entire `[upm]` branch content from this repo, to your Unity3D `Packages/<PACKAGE_NAME>` folder.
 
 ## Getting Started
 
@@ -129,7 +129,7 @@ There are 2 ways to use this plugin:
 
 1. Use the `Runtime/VibrationComponent.cs` script attached to a _gameObject_ **(Recommended)**
 
-    ![Vibration Component](./Images/vibration-component-inspector.png)
+    ![Vibration Component](./Images/Screenshots/vibration-component-inspector.png)
 
     On that script, you can:
 
@@ -306,7 +306,7 @@ vibration using haptic engine
     //npm.pkg.github.com/:_authToken=<GITHUB_TOKEN>
     ```
 
-    Or, use the file `Packages/com.benoitfreslon.vibration/.npmrc` that already exists in this repository:
+    Or, use the file `Packages/<PACKAGE_NAME>/.npmrc` that already exists in this repository:
 
     ```bash
     # Export the environment variable "$GITHUB_TOKEN"
@@ -325,12 +325,12 @@ vibration using haptic engine
 
     # Run the npm scripts
     npm install
-    npm run pack:package # Pack in a .tgz for testing (optional)
     npm run publish:package # Publish from repository ROOT path
 
-    cd Packages/com.benoitfreslon.vibration 
-    npm package:publish-from-local # Publish from package path
-    npm publish:from-local # Or use this another script alias for publishing (optional)
+    cd Packages/<PACKAGE_NAME>
+    npm run pack:package # Pack in a .tgz for testing (optional)
+    npm run package:publish-from-local # Publish from package path
+    npm run publish:from-local # Or use this another script alias for publishing (optional)
     ``````
 
     > **WARNING:** Avoid use the common **`npm publish`** directly, because the hooks `prepare`, `prepublish` ... aren't triggered in this package. They have conflicts with [OpenUPM Azure pipelines](https://dev.azure.com/openupm/openupm/_build?definitionId=1&_a=summary) and fail when try run automation publishing tags to OpenUPM :(
@@ -341,7 +341,7 @@ Optionally, you can run specific npm scripts inside of `Packages/<PACKAGE_NAME>`
 
 ```bash
 # Go to the package dir
-cd Packages/com.benoitfreslon.vibration
+cd Packages/<PACKAGE_NAME>
 
 # Pack a .tgz for testing (optional)
 npm run package:pack

@@ -290,3 +290,13 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# ---------------------
+# Custom.gitignore
+# ---------------------
+
+[gG]it/*
+*.[pP]atch/*
+*.[pP]atches/*
+
+node_modules.meta

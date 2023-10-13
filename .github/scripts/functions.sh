@@ -203,6 +203,32 @@ copyFilesForPublish() {
     done
 }
 
+# TODO: [Feature] Use this function to loop over all packages and do all operations (copy files, rename and publish)
+# @see checkPkgRoot
+# @see [How do you store a list of directories into an array in Bash?](https://stackoverflow.com/a/4495304)
+fetchPackages() {
+    local packages_root=$1
+    checkPkgRoot
+
+    # PS: "<PATH>/*/" is a glob that list only directories
+    if [ -z $packages_root ]
+    then
+        packages_root=(
+            $PKG_ROOT/Packages/*/
+        )
+    elif [ -d $packages_root ]
+    then
+        packages_root=(
+            $packages_root/*/
+        )
+    fi
+
+    for package_path in "${packages_root[@]}" 
+    do
+        echo "[FETCH PACKAGES] Package: '$package_path'"
+    done
+}
+
 # TODO: Move this function to another script file (e.g .github/scripts/local.sh)
 # TODO: Move common functions dependencies to another script file in order to reuse (e.g .github/scripts/common.sh)
 # 
@@ -280,6 +306,9 @@ run() {
     elif [ $1 == "githubActionsVariables" ]
     then
         githubActionsOutputs
+    elif [ $1 == "fetchPackages" ]
+    then
+        fetchPackages $2
     elif [ $1 == "copyFilesForPublish" ]
     then
         copyFilesForPublish $2 $3

@@ -99,11 +99,19 @@ renameInvalidDirs() {
     fi
 
     echo "[RENAME DIRECTORIES] Package Root: $PKG_ROOT/"
+    
+    chmod -R 777 "$PKG_ROOT/"
 
     # Rename UPM special directories with suffix "~"
     if [ -d "$PKG_ROOT/Samples" ] && [ ! -d "$PKG_ROOT/Samples~" ]
     then
-        mv "$PKG_ROOT/Samples" "$PKG_ROOT/Samples~"
+        # PS: Replaced "mv" to "copy" + "remove" of Samples~ dir, because sometimes
+        #     shows the error Permission Denied. Specially if Samples
+        #    have several sub-directories
+        mkdir -p "$PKG_ROOT/Samples~"
+        cp -R "$PKG_ROOT/Samples/." "$PKG_ROOT/Samples~/"
+        
+        rm -rf "$PKG_ROOT/Samples"
         rm -f "$PKG_ROOT/Samples.meta"
 
         echo "[RENAMED] Samples => $PKG_ROOT/Samples~"
@@ -293,6 +301,12 @@ localPublish() {
     checkPkgRoot $1
 
     cd $PKG_ROOT
+    
+    # Install dev dependencies if weren't installed yet
+    if [ ! -d "./node_modules" ]
+    then
+        npm i    
+    fi
     npm run package:prepare && npm publish
 }
 

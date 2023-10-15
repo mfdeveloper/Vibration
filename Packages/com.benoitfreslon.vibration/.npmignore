@@ -1,5 +1,5 @@
 # ---------------------
-# "npm publish" ignore
+# "npm publish".npmignore
 # ---------------------
 
 # PS: By default, the package-lock.json is ignored
@@ -18,3 +18,7 @@ MobileProjects/*
 .env.test.local
 .env.production.local
 .env.local
+
+# Node npm files
+node_modules.meta
+package-lock.json.meta

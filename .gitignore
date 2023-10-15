@@ -300,3 +300,4 @@ dist
 *.[pP]atches/*
 
 node_modules.meta
+package-lock.json.meta

@@ -30,8 +30,6 @@ namespace VibrationPlugin
         [SerializeField] 
         [Tooltip("The type of vibration effect (SHORT: Android <= 9, LIGHT...HEAVY: Android >= 10)")]
         protected VibrationType type = VibrationType.None;
-
-        #if UNITY_ANDROID
         
         // -- Unity Android core instances --
         protected AndroidJavaClass unityPlayer;
@@ -40,8 +38,6 @@ namespace VibrationPlugin
         // -- VibrationPlugin required instances --
         protected AndroidJavaObject vibrationPlugin;
         protected AndroidJavaObject durationLongObj;
-
-        #endif
 
         #endregion
 
@@ -89,27 +85,7 @@ namespace VibrationPlugin
         [SuppressMessage("ReSharper", "StringLiteralTypo")]
         protected virtual void Start()
         {
-            #if UNITY_ANDROID
-            
-            // Avoid: "Field currentActivity or type signature not found" exception
-            // when a device is connected over USB and using Unity Remote app
-            try
-            {    
-                // PS: If you wish instantiate Kotlin Companion or Java static classes straight-forward from full package name,
-                // use the "$" special character (e.g "android.media.AudioAttributes$Builder")
-                unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
-                currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
-                vibrationPlugin = new AndroidJavaObject("com.benoitfreslon.unity.vibrations.lib.Vibration", currentActivity);
-            }
-            catch (Exception err)
-            {
-                if (!err.Message.Contains("Field currentActivity"))
-                {
-                    throw err;
-                }
-            }
-
-            #endif
+            InitComponents();
         }
 
         protected virtual void OnDisable()
@@ -144,13 +120,47 @@ namespace VibrationPlugin
         }
 
         #endregion
+
+        [SuppressMessage("ReSharper", "StringLiteralTypo")]
+        protected virtual void InitComponents()
+        {
+            #if UNITY_ANDROID
+                        
+            // Avoid: "Field currentActivity or type signature not found" exception
+            // when a device is connected over USB and using Unity Remote app
+            try
+            {    
+                // PS: If you wish instantiate Kotlin Companion or Java static classes straight-forward from full package name,
+                // use the "$" special character (e.g "android.media.AudioAttributes$Builder")
+                unityPlayer = new AndroidJavaClass("com.unity3d.player.UnityPlayer");
+                currentActivity = unityPlayer.GetStatic<AndroidJavaObject>("currentActivity");
+                vibrationPlugin = new AndroidJavaObject("com.benoitfreslon.unity.vibrations.lib.Vibration", currentActivity);
+            }
+            catch (Exception err)
+            {
+                if (!err.Message.Contains("Field currentActivity"))
+                {
+                    throw;
+                }
+
+                if (Debug.isDebugBuild)
+                {
+                    var warnMessage = $"[{TAG}] [Android] Error on load fields/components." +
+                                            $"Exception => {err.GetType().Name} : {err.Message}";
+                    
+                    Debug.LogWarning(warnMessage);   
+                }
+            }
+
+            #endif
+        }
         
         protected virtual void LoadOptionsSaved()
         {
             if (options == null)
             { 
                 /*
-                 * Fallback to some Unity versions that ScriptableObjects 
+                 * Fallback to some Unity versions that ScriptableObjects
                  * passed by inspector disappears when plays.
                  * 
                  * Or, if a developer forget to define a custom ScriptableObject

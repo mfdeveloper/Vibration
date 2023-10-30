@@ -127,7 +127,7 @@ namespace VibrationPlugin
 
 			Vibrate(0, typeValue: (int) VibrationType.Normal);
 			
-			#else
+			#elif !UNITY_STANDALONE
 
 			if (Application.isConsolePlatform)
 			{

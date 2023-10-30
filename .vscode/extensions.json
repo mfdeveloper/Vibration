@@ -2,6 +2,7 @@
     "recommendations": [
         "xabikos.javascriptsnippets",
         "wayou.vscode-todo-highlight",
-        "visualstudiotoolsforunity.vstuc",
+        "tamasfe.even-better-toml",
+        "visualstudiotoolsforunity.vstuc"
     ]
 }

@@ -2,12 +2,7 @@
     "name": "Vibration",
     "rootNamespace": "VibrationPlugin",
     "references": [],
-    "includePlatforms": [
-        "Android",
-        "Editor",
-        "iOS",
-        "WebGL"
-    ],
+    "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,

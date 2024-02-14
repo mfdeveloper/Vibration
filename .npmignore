@@ -1,0 +1,24 @@
+# ---------------------
+# "npm publish".npmignore
+# ---------------------
+
+# PS: By default, the package-lock.json is ignored
+# when publish the package to any registry.
+#
+# So, you must add package-lock.json.meta Unity file
+# to your .gitignore
+
+# Native plugin projects (Android, IOS, WebGL...)
+MobileProjects~
+MobileProjects/*
+
+# dotenv environment variable files
+.env
+.env.development.local
+.env.test.local
+.env.production.local
+.env.local
+
+# Node npm files
+node_modules.meta
+package-lock.json.meta

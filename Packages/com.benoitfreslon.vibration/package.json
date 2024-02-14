@@ -4,7 +4,7 @@
 	"displayName": "Vibration",
 	"description": "Native free plugin for Unity for Android, iOS and WebGL. Use custom vibrations/haptics on mobile.",
 	"unity": "2019.3",
-	"version": "0.1.8",
+	"version": "0.1.9",
 	"keywords": [],
 	"devDependencies": {
 		"cross-var": "^1.1.0",

@@ -103,13 +103,17 @@ renameInvalidDirs() {
     chmod -R 777 "$PKG_ROOT/"
 
     # Rename UPM special directories with suffix "~"
-    if [ -d "$PKG_ROOT/Samples" ] && [ ! -d "$PKG_ROOT/Samples~" ]
+    if [ -d "$PKG_ROOT/Samples" ]
     then
         # PS: Replaced "mv" to "copy" + "remove" of Samples~ dir, because sometimes
         #     shows the error Permission Denied. Specially if Samples
-        #    have several sub-directories
-        mkdir -p "$PKG_ROOT/Samples~"
-        cp -R "$PKG_ROOT/Samples/." "$PKG_ROOT/Samples~/"
+        #     have several sub-directories
+        if [ ! -d "$PKG_ROOT/Samples~" ]
+        then 
+            mkdir -p "$PKG_ROOT/Samples~"
+        fi
+
+        cp -Rf "$PKG_ROOT/Samples/." "$PKG_ROOT/Samples~/"
         
         rm -rf "$PKG_ROOT/Samples"
         rm -f "$PKG_ROOT/Samples.meta"

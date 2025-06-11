@@ -1,9 +1,11 @@
 {
     "terminal.integrated.defaultProfile.windows": "Git Bash",
+    "dotnet.defaultSolution": "Vibration.sln",
     "dotnet.preferCSharpExtension": true,
     "dotnetAcquisitionExtension.enableTelemetry": false,
     "files.associations": {
         "*.jspre": "javascript",
         "*.jslib": "javascript"
-    }
+    },
+    "workbench.colorTheme": "Visual Studio 2019 Dark"
 }

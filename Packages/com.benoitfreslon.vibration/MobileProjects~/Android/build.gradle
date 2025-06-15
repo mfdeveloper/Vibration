@@ -20,7 +20,24 @@ buildscript {
         
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.1.1'
+        /*
+         * Unity gradle compatibility
+         *
+         * | Unity version  | Gradle version | Android Gradle plug-in version |
+           | ------         |      ------    |          ------                |
+         * | 2022.3.38f1+ 	|      7.5.1 	 |          7.4.2                 |
+         *
+         * If you wish use a new JDK + Gradle plugin versions on Android Studio, on
+         * this Android project, try to use the values below:
+         *
+         * | Gradle plugin     | JDK version (on .gradle files)     |
+         * | ------            | ------                             |
+         * | 8.1.1 (ow newest) | JavaVersion.VERSION_17 (ow newest) |
+         *
+         * References:
+         * - https://docs.unity3d.com/2022.3/Documentation/Manual/android-gradle-overview.html
+         */
+        classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong
@@ -35,6 +52,6 @@ allprojects {
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
 }

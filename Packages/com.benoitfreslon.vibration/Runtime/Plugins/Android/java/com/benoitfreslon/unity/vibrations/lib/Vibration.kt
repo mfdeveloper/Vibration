@@ -38,7 +38,7 @@ open class Vibration @JvmOverloads constructor(
         context?.let {
             if (vibrator == null) {
                 @Suppress("DEPRECATION")
-                vibrator = context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+                vibrator = it.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
 
                 HapticData.vibrator = vibrator
             }

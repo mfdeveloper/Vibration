@@ -1,0 +1,57 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    ext {
+        kotlin_version = '1.9.0'
+        appcompat_version = '1.6.1'
+        androidx_core_version = '1.10.1'
+        fragmentktx_version = '1.5.7'
+        activityktx_version = '1.7.2'
+        lifecycle_version = '2.6.1'
+        contraintLayout_version = '2.1.4'
+        junit_version = '4.13.2'
+        google_truth_version = '1.1.4'
+        androidx_junit_version = '1.1.5'
+        androidx_espresso_version = '3.5.1'
+    }
+    repositories {
+        google()
+        mavenCentral()
+        
+    }
+    dependencies {
+        /*
+         * Unity gradle compatibility
+         *
+         * | Unity version  | Gradle version | Android Gradle plug-in version |
+           | ------         |      ------    |          ------                |
+         * | 2022.3.38f1+ 	|      7.5.1 	 |          7.4.2                 |
+         *
+         * If you wish use a new JDK + Gradle plugin versions on Android Studio, on
+         * this Android project, try to use the values below:
+         *
+         * | Gradle plugin     | JDK version (on .gradle files)     |
+         * | ------            | ------                             |
+         * | 8.1.1 (ow newest) | JavaVersion.VERSION_17 (ow newest) |
+         *
+         * References:
+         * - https://docs.unity3d.com/2022.3/Documentation/Manual/android-gradle-overview.html
+         */
+        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+tasks.register('clean', Delete) {
+    delete rootProject.layout.buildDirectory
+}
